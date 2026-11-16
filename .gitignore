@@ -8,3 +8,6 @@ vo/
 # older video renders; launch/purgekv_launch.mp4 is the published one
 launch/purgekv_stream_launch.mp4
 launch/purgekv_launch_music.mp4
+
+*.egg-info/
+build/
