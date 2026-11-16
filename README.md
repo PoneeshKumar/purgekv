@@ -1,5 +1,11 @@
 # purgekv
 
+[![lint](https://github.com/PoneeshKumar/purgekv/actions/workflows/lint.yml/badge.svg)](https://github.com/PoneeshKumar/purgekv/actions/workflows/lint.yml)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Apple Silicon](https://img.shields.io/badge/platform-Apple%20Silicon-black?logo=apple)
+![MLX](https://img.shields.io/badge/built%20on-MLX-orange)
+
 **Resume local LLM chats faster on Apple Silicon.** purgekv streams a saved KV cache
 from SSD layer by layer, so the GPU starts computing immediately instead of waiting
 for the whole cache to load.
