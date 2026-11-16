@@ -65,7 +65,8 @@ for N in Ns:
         row[k + "_ttft_s"] = round(min(t for t, _, _ in v), 4)
         row[k + "_acquire_s"] = round(min(a for _, a, _ in v), 4)
         row[k + "_correct"] = all(o == ref for _, _, o in v)
-    del base; os.remove(f); mx.clear_cache()
+    base = None  # release this N's cache before the next size
+    os.remove(f); mx.clear_cache()
     rows.append(row)
     print(json.dumps(row), flush=True)
 

@@ -3,7 +3,6 @@ generation after restore is token-identical to an uninterrupted run."""
 import copy, json
 import mlx.core as mx
 from mlx_lm import load
-from mlx_lm.models.cache import make_prompt_cache
 from purgekv.common import real_text_tokens, prefill, greedy
 from purgekv.store import PurgeableKVStore
 

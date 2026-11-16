@@ -9,7 +9,7 @@ after the history and after every turn. Policies (codec x write strategy):
   append+q8   append + 8-bit affine (lossy)
 Then each chat resumes from SSD with the page cache bypassed (a true cold SSD read).
 """
-import copy, json, os, shutil, sys, time
+import copy, json, os, shutil, sys
 import mlx.core as mx
 from mlx_lm import load
 from purgekv.common import real_text_tokens, prefill, greedy, Timer

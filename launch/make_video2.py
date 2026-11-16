@@ -118,7 +118,6 @@ def chat_bubble(c, x, y, w, h, s, a, color=LINE, tc=FG, size=34):
 
 
 def s_hook(c, t, dur):
-    a = out3(t / 0.6)
     c.words(W / 2, 250, "Come back to a local AI chat…", 76, t, anchor_center=True)
     k = out3((t - 0.9) / 0.5)
     chat_bubble(c, 520, 380 + (1 - k) * 30, 880, 110, "Can you continue the refactor?", k, (36, 44, 60))
@@ -151,7 +150,7 @@ def s_sequential(c, t, dur):
     x0, y0, wpx = 380, 380, 1300
     lanes(c, x0, y0, wpx, a)
     scale = wpx / 0.5  # 0.5 s across
-    load, comp = 0.30, 0.16  # measured: 0.46 s total, 0.16 s compute-only
+    load = 0.30  # measured: 0.46 s total, of which 0.16 s is compute-only
     p = clamp((t - 0.8) / 3.4) * 0.46
     c.rect((x0, y0, x0 + scale * min(p, load), y0 + 72), 14, BLUE, a, glow=True)
     if p > load:
@@ -314,7 +313,6 @@ def s_cta(c, t, dur):
     a = out3((t - 0.8) / 0.5)
     c.text((W / 2, 520), "Layer-streamed KV resume for MLX", 48, MUTED, a, 600, "mm")
     chips = ["Open source · MIT", "Benchmarks + raw data", "Link below"]
-    x = W / 2 - 3 * 190 - 40
     for i, s in enumerate(chips):
         b = out3((t - 1.4 - i * 0.25) / 0.5)
         wpx = 360
