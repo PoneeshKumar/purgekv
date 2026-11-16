@@ -101,7 +101,9 @@ class SegmentKVStore:
         if self.codec == "q8":
             q = [mx.quantize(a, group_size=64, bits=8) for a in layers]
             mx.eval(q)
-            arrs = [np.asarray(x).reshape(-1).view(np.uint8) for t in q for x in t]
+            # numpy has no bfloat16: move bf16 scales/biases through a uint16 view
+            arrs = [np.asarray(x.view(mx.uint16) if x.dtype == mx.bfloat16 else x).reshape(-1).view(np.uint8)
+                    for t in q for x in t]
             meta["sizes"] = [a.size for a in arrs]
             meta["qshapes"] = [[x.shape for x in t] for t in q]
             meta["qdtypes"] = [[x.dtype for x in t] for t in q]
