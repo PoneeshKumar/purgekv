@@ -12,10 +12,9 @@ import imageio_ffmpeg
 
 FF = imageio_ffmpeg.get_ffmpeg_exe()
 W, H, FPS, SR = 1920, 1080, 30, 44100
-OUT, VO_DIR = sys.argv[1], sys.argv[2]
-PREVIEW = sys.argv[sys.argv.index("--preview") + 1] if "--preview" in sys.argv else None
-ONLY_PREVIEW = "--frames-only" in sys.argv
-NO_VOICE = "--no-voice" in sys.argv  # narration clips still set the scene timing
+# set from the command line in __main__; importable for launch/make_assets.py
+OUT = VO_DIR = PREVIEW = None
+ONLY_PREVIEW = NO_VOICE = False
 
 # ---------------- palette & type ----------------
 BG0, BG1 = (9, 11, 16), (18, 22, 32)
@@ -501,7 +500,7 @@ def build_audio(vos, starts, durs, total):
 
 
 # ---------------- render ----------------
-VOS, STARTS, DURS, TOTAL = timeline()
+VOS = STARTS = DURS = TOTAL = None  # filled by timeline() in __main__
 
 
 def frame_at(T):
@@ -545,4 +544,9 @@ def main():
 
 
 if __name__ == "__main__":
+    OUT, VO_DIR = sys.argv[1], sys.argv[2]
+    PREVIEW = sys.argv[sys.argv.index("--preview") + 1] if "--preview" in sys.argv else None
+    ONLY_PREVIEW = "--frames-only" in sys.argv
+    NO_VOICE = "--no-voice" in sys.argv  # narration clips still set the scene timing
+    VOS, STARTS, DURS, TOTAL = timeline()
     main()
