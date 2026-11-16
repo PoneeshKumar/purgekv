@@ -5,8 +5,8 @@ TTFT = load + compute. Streaming makes it ~max(load, compute) + one layer.
 On Apple Silicon the bytes read from SSD land in memory the GPU uses directly
 (unified memory), so there is no host-to-device copy stage to pipeline as on CUDA.
 
-Works with SegmentKVStore files (raw or q8 codec) and Llama-style mlx-lm models
-(model.model.{embed_tokens, layers, norm}).
+Works with SegmentKVStore files (raw or q8 codec) and decoder-only mlx-lm models with
+standard attention: tested on Llama 3.x and Qwen3 (check_supported() refuses others).
 """
 import fcntl, os
 from concurrent.futures import ThreadPoolExecutor
@@ -105,8 +105,24 @@ def load_then_compute(model, store, key, tokens):
     return caches, logits[:, -1, :]
 
 
+def check_supported(model):
+    """Streaming needs a plain decoder stack (embed -> layers -> norm) where every layer
+    uses a standard full-attention KVCache. Tested: Llama 3.x, Qwen3."""
+    inner = getattr(model, "model", None)
+    missing = [a for a in ("embed_tokens", "layers", "norm") if not hasattr(inner, a)]
+    if missing:
+        raise NotImplementedError(f"{type(model).__module__}: no model.model.{'/'.join(missing)}")
+    if getattr(inner, "swa_idx", None) is not None:
+        raise NotImplementedError("sliding-window attention layers are not supported yet")
+    if hasattr(model, "make_cache"):
+        kinds = {type(c).__name__ for c in model.make_cache()}
+        if kinds != {"KVCache"}:
+            raise NotImplementedError(f"cache types {sorted(kinds)} are not supported yet (only KVCache)")
+
+
 def stream_prefill(model, store, key, tokens):
     """Resume a session: run the new tokens through the model while KV streams in per layer."""
+    check_supported(model)
     layout = _layout(store, key)
     inner = model.model
     n_layers = len(inner.layers)
