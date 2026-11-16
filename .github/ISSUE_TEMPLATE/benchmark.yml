@@ -1,0 +1,35 @@
+name: Share your numbers
+description: Post python examples/demo.py results from your Mac
+title: "[benchmark] <chip>, <RAM> GB, <model>"
+labels: [benchmark]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run `python examples/demo.py` (optionally with `--model` / `--tokens`) and paste its output.
+        Results from Macs other than an M4 MacBook are especially welcome.
+  - type: textarea
+    id: output
+    attributes:
+      label: demo.py output
+      description: Paste everything it printed, including the first line with your chip and model.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: power
+    attributes:
+      label: Power
+      options: [Plugged in, Battery, Battery + Low Power Mode]
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command you ran
+      placeholder: python examples/demo.py --model mlx-community/Qwen3-0.6B-4bit
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Other apps running, external SSD, surprises.
