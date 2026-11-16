@@ -92,16 +92,16 @@ All 15 runs matched reference outputs token for token.
 * **Group 7 isn't safe at idle either.** Even before the app opened, only 5–12 of 12 caches were still resident. A normally busy Mac purges them on its own.
 * **The app slowdown in the RAM baseline varies.** It happened in 1 of 3 reps (11.6 s). In the other two, macOS swapped the LLM's memory instead, which still costs 3–5 GB of SSD swap writes.
 
-### C. Coverage (`test_cache_types.py`)
+### C. Coverage (`research/test_cache_types.py`)
 Round trip through the store, then 24 greedy tokens, compared with an uninterrupted run. All four were identical:
 Llama `KVCache`, Llama 8-bit `QuantizedKVCache`, Gemma-3 `RotatingKVCache`+`KVCache`,
 and Qwen3.5 hybrid `ArraysCache`+`KVCache`.
 
-### D. Kernel facts worth knowing (`test_purgeable.py`)
+### D. Kernel facts worth knowing (`research/test_purgeable.py`)
 * Volatile pages leave `phys_footprint` at once (a 512 MB object: 1085 → 573 MB).
 * Under a low free-page pool, the default group 0 was purged instantly while group 7 survived. With plenty of free memory, neither was purged.
 
-### E. Making the SSD tier write less: lossless compression (`bench_compress.py`)
+### E. Making the SSD tier write less: lossless compression (`research/bench_compress.py`)
 Real 8K-token caches, Apple's built-in libcompression, 8 threads, every result
 round-tripped bit-for-bit. "split" = store the high byte (sign+exponent) and low byte
 of each 16-bit value as separate planes before compressing.
@@ -121,7 +121,7 @@ oMLX, LM Studio's mlx-engine and vllm-mlx write their SSD tiers uncompressed; lo
 exponent coding of bf16 KV is known on GPUs (GAAC, SplitZip, ExANS).
 End-to-end resume time with compression was not measured.
 
-### F. All SSD improvements combined (`bench_combined.py`, `purgekv/segstore.py`)
+### F. All SSD improvements combined (`research/bench_combined.py`, `purgekv/segstore.py`)
 Llama-3.2-3B, 4 chats × (4K-token history + 8 turns of 256 tokens), saved after every
 turn. Each chat resumed with the page cache bypassed (`F_NOCACHE`, a true cold SSD read).
 
@@ -139,7 +139,7 @@ turn. Each chat resumed with the page cache bypassed (`F_NOCACHE`, a true cold S
 * **Lossless compression** saves a further 15% but *slowed* cold resumes (0.9 s against 0.5 s). The prototype's numpy plane re-interleaving is the bottleneck; native code would be needed to make it free.
 * Append-only (oMLX blocks, LM Studio 256-token records) and 8-bit (oMLX Affine8) already exist. The lossless part is the only new piece, and it's marginal.
 
-### G. Estimate: large models on a Mac Studio (`estimate_studio.py`)
+### G. Estimate: large models on a Mac Studio (`research/estimate_studio.py`)
 **Not measured.** It applies F's measured ratios to published model shapes, with
 assumed hardware: SSD ~5 GB/s on M3 Ultra and ~13 GB/s on the M5 generation, and
 long-context prefill ranges from community benchmarks. Workload: an agent session
@@ -157,7 +157,7 @@ What changes at Mac Studio scale:
 * **MLA models (DeepSeek) benefit least**, because their KV cache is already compressed about 5× by design.
 * Caveats: the recompute ranges understate long-context cost, since attention grows quadratically. Real SSD throughput through Python was ~1.5–2 GB/s here, below the spec numbers used. No Mac Studio was tested.
 
-### H. Going beyond existing tiers: layer-streamed resume (`purgekv/stream.py`, `bench_stream.py`)
+### H. Going beyond existing tiers: layer-streamed resume (`purgekv/stream.py`, `research/bench_stream.py`)
 oMLX, LM Studio's mlx-engine and vllm-mlx all load a session's whole KV cache from SSD,
 *then* run the new tokens. Streaming starts the forward pass at once and reads layer
 i+1's KV (on 4 I/O threads) while the GPU computes layer i. With unified memory the
@@ -203,12 +203,12 @@ purgekv/purgeable.py   ctypes: mach_vm_allocate(VM_FLAGS_PURGABLE), mach_vm_purg
 purgekv/store.py       PurgeableKVStore (any mlx-lm cache type), spill-to-SSD, thread-safe
 purgekv/common.py      prefill/greedy, real-text sessions, vm_stat/swap/footprint/pressure probes
 purgekv/hog.py         stand-in foreground app
-bench_latency.py       A      bench_pressure2.py  B (4 modes)   bench_pressure3.py  B (canary)
-test_cache_types.py    C      test_purgeable.py   D             results/  raw JSON
-bench_compress.py      E      bench_combined.py   F             estimate_studio.py  G
-purgekv/stream.py      layer-streamed resume     bench_stream.py     H
+research/bench_latency.py       A      research/bench_pressure2.py  B (4 modes)   research/bench_pressure3.py  B (canary)
+research/test_cache_types.py    C      research/test_purgeable.py   D             results/  raw JSON
+research/bench_compress.py      E      research/bench_combined.py   F             research/estimate_studio.py  G
+purgekv/stream.py      layer-streamed resume     research/bench_stream.py     H
 purgekv/segstore.py    append-only SSD tier with raw / lossless / 8-bit codecs
-bench_pressure.py      first pressure version (Low Power Mode runs, superseded by v2)
-run_all.sh             reproduce everything      launch/make_video.py, make_video2.py  render the launch videos (v2: `--no-voice`)
+research/bench_pressure.py      first pressure version (Low Power Mode runs, superseded by v2)
+research/run_all.sh    reproduce everything      launch/make_video.py, make_video2.py  render the launch videos (v2: `--no-voice`)
 ```
-Reproduce everything: `./run_all.sh` (Apple Silicon, Python ≥ 3.10). MIT licensed.
+Reproduce everything: `./research/run_all.sh` (Apple Silicon, Python ≥ 3.10). MIT licensed.
