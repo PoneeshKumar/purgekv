@@ -1,0 +1,152 @@
+{
+ "mode": "purgeable+lazy",
+ "rep": 1,
+ "sessions": 12,
+ "tokens": 8192,
+ "hog_gb": 8,
+ "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+ "stash_all_s": 1.33,
+ "ssd_written_at_idle_mb": 0,
+ "before_app": {
+  "footprint_mb": 847,
+  "swap_used_mb": 8524.69,
+  "pressure": 1,
+  "swapouts_mb": 100961.359375,
+  "swapins_mb": 80377.90625,
+  "compressions_mb": 2283304.03125,
+  "purged_mb": 256653.75,
+  "resident": 8,
+  "spilled": 0
+ },
+ "app_alloc_s": 1.5886772919911891,
+ "after_app_alloc": {
+  "footprint_mb": 852,
+  "swap_used_mb": 8612.56,
+  "pressure": 2,
+  "swapouts_mb": 101049.234375,
+  "swapins_mb": 80380.671875,
+  "compressions_mb": 2292225.734375,
+  "purged_mb": 258701.78125,
+  "resident": 0,
+  "spilled": 0
+ },
+ "app_retouch_idle_s": 0.8068590000038967,
+ "after_retouch_idle": {
+  "footprint_mb": 852,
+  "swap_used_mb": 8612.56,
+  "pressure": 1,
+  "swapouts_mb": 101049.234375,
+  "swapins_mb": 80381.421875,
+  "compressions_mb": 2292225.734375,
+  "purged_mb": 258701.78125,
+  "resident": 0,
+  "spilled": 0
+ },
+ "resume_ttft_s": [
+  10.741,
+  10.143,
+  10.351,
+  10.595,
+  10.761,
+  10.877,
+  10.863,
+  10.827,
+  10.991,
+  10.968,
+  11.053,
+  11.093
+ ],
+ "resume_from": [
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute"
+ ],
+ "outputs_match": true,
+ "after_resume": {
+  "footprint_mb": 1369,
+  "swap_used_mb": 10343.56,
+  "pressure": 2,
+  "swapouts_mb": 104988.609375,
+  "swapins_mb": 82605.0,
+  "compressions_mb": 2302707.3125,
+  "purged_mb": 258919.453125,
+  "resident": 0,
+  "spilled": 0
+ },
+ "app_retouch_after_resume_s": 5.380587583000306,
+ "end": {
+  "footprint_mb": 1316,
+  "swap_used_mb": 8909.81,
+  "pressure": 1,
+  "swapouts_mb": 105275.15625,
+  "swapins_mb": 84198.125,
+  "compressions_mb": 2303030.875,
+  "purged_mb": 258919.484375,
+  "resident": 0,
+  "spilled": 0
+ },
+ "delta_app_open": {
+  "swapouts_mb": 88,
+  "swapins_mb": 4,
+  "purged_mb": 2048
+ },
+ "delta_resume": {
+  "swapouts_mb": 4226,
+  "swapins_mb": 3817,
+  "purged_mb": 218
+ },
+ "ssd_written_total_mb": 0,
+ "pressure_events": [
+  [
+   1794802849.51,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802849.54,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802849.56,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802849.58,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802849.61,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802982.18,
+   2,
+   0,
+   0
+  ],
+  [
+   1794802982.21,
+   2,
+   0,
+   0
+  ]
+ ]
+}

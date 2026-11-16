@@ -1,0 +1,99 @@
+{
+ "mode": "ram",
+ "rep": 1,
+ "sessions": 12,
+ "tokens": 8192,
+ "hog_gb": 8,
+ "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+ "stash_all_s": 1.25,
+ "ssd_written_at_idle_mb": 0,
+ "before_app": {
+  "footprint_mb": 4452,
+  "swap_used_mb": 5945.12,
+  "pressure": 1,
+  "swapouts_mb": 94234.546875,
+  "swapins_mb": 76805.78125,
+  "compressions_mb": 2227550.96875,
+  "purged_mb": 252923.125
+ },
+ "app_alloc_s": 2.938407375011593,
+ "after_app_alloc": {
+  "footprint_mb": 4391,
+  "swap_used_mb": 10279.69,
+  "pressure": 4,
+  "swapouts_mb": 98568.734375,
+  "swapins_mb": 76815.59375,
+  "compressions_mb": 2242939.859375,
+  "purged_mb": 252943.21875
+ },
+ "app_retouch_idle_s": 1.1796260000264738,
+ "after_retouch_idle": {
+  "footprint_mb": 4391,
+  "swap_used_mb": 10615.38,
+  "pressure": 1,
+  "swapouts_mb": 98904.796875,
+  "swapins_mb": 76821.28125,
+  "compressions_mb": 2243222.015625,
+  "purged_mb": 252943.53125
+ },
+ "resume_ttft_s": [
+  0.998,
+  0.073,
+  0.07,
+  0.069,
+  0.348,
+  0.73,
+  0.625,
+  0.59,
+  0.534,
+  0.851,
+  0.522,
+  0.509
+ ],
+ "resume_from": [
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram",
+  "ram"
+ ],
+ "outputs_match": true,
+ "after_resume": {
+  "footprint_mb": 1805,
+  "swap_used_mb": 8936.94,
+  "pressure": 2,
+  "swapouts_mb": 99338.359375,
+  "swapins_mb": 78919.15625,
+  "compressions_mb": 2248152.546875,
+  "purged_mb": 252943.765625
+ },
+ "app_retouch_after_resume_s": 0.7303930420021061,
+ "end": {
+  "footprint_mb": 1355,
+  "swap_used_mb": 8936.94,
+  "pressure": 1,
+  "swapouts_mb": 99338.359375,
+  "swapins_mb": 78919.84375,
+  "compressions_mb": 2248152.546875,
+  "purged_mb": 252943.765625
+ },
+ "delta_app_open": {
+  "swapouts_mb": 4670,
+  "swapins_mb": 16,
+  "purged_mb": 20
+ },
+ "delta_resume": {
+  "swapouts_mb": 434,
+  "swapins_mb": 2099,
+  "purged_mb": 0
+ },
+ "ssd_written_total_mb": 0,
+ "pressure_events": []
+}

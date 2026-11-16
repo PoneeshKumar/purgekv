@@ -1,0 +1,90 @@
+{
+ "mode": "ram",
+ "sessions": 12,
+ "tokens": 8192,
+ "hog_gb": 8.0,
+ "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+ "kv_per_session_mb": 256.0,
+ "before_hog": {
+  "footprint_mb": 4419,
+  "swap_used_mb": 8050.5,
+  "swapouts_mb": 49106.59375,
+  "swapins_mb": 32140.625,
+  "compressions_mb": 2001025.015625,
+  "purged_mb": 236759.671875
+ },
+ "hog_alloc_s": 4.533971374999965,
+ "after_hog_alloc": {
+  "footprint_mb": 4329,
+  "swap_used_mb": 10502.81,
+  "swapouts_mb": 51606.03125,
+  "swapins_mb": 32181.609375,
+  "compressions_mb": 2013334.546875,
+  "purged_mb": 236816.3125
+ },
+ "hog_retouch_idle_s": 24.649179000000004,
+ "after_retouch_idle": {
+  "footprint_mb": 4329,
+  "swap_used_mb": 11262.25,
+  "swapouts_mb": 56622.53125,
+  "swapins_mb": 36439.6875,
+  "compressions_mb": 2019482.5625,
+  "purged_mb": 236887.59375
+ },
+ "resume_ttft_s": [
+  1.859,
+  1.725,
+  0.843,
+  1.282,
+  2.938,
+  1.63,
+  1.276,
+  1.409,
+  1.508,
+  1.676,
+  1.341,
+  0.802
+ ],
+ "resume_outcome": [
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit"
+ ],
+ "outputs_match_reference": true,
+ "after_resume": {
+  "footprint_mb": 1991,
+  "swap_used_mb": 10074.38,
+  "swapouts_mb": 58779.96875,
+  "swapins_mb": 39768.125,
+  "compressions_mb": 2026784.421875,
+  "purged_mb": 236985.0625
+ },
+ "hog_retouch_after_resume_s": 8.84266212498187,
+ "after_retouch_resume": {
+  "footprint_mb": 1521,
+  "swap_used_mb": 8906.62,
+  "swapouts_mb": 59123.578125,
+  "swapins_mb": 41256.15625,
+  "compressions_mb": 2029095.53125,
+  "purged_mb": 237017.734375
+ },
+ "delta_app_open": {
+  "swapouts_mb": 7516,
+  "swapins_mb": 4299,
+  "purged_mb": 128
+ },
+ "delta_resume": {
+  "swapouts_mb": 2501,
+  "swapins_mb": 4816,
+  "purged_mb": 130
+ }
+}

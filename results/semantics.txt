@@ -1,0 +1,4 @@
+[1] survived=True data_intact=True
+[2] footprint nonvolatile=1085 MB  volatile=573 MB  (drop 512 MB)
+[3] group 0: purged 0/10 within 100 ms with no deliberate pressure
+[3] group 7: purged 0/10 within 100 ms with no deliberate pressure

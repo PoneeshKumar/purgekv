@@ -1,0 +1,95 @@
+{
+ "mode": "purgeable",
+ "sessions": 12,
+ "tokens": 8192,
+ "hog_gb": 8.0,
+ "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+ "kv_per_session_mb": 256.0,
+ "before_hog": {
+  "footprint_mb": 1348,
+  "swap_used_mb": 6902.19,
+  "swapouts_mb": 77118.484375,
+  "swapins_mb": 60084.109375,
+  "compressions_mb": 2133141.84375,
+  "purged_mb": 245443.09375,
+  "resident_sessions": 12
+ },
+ "hog_alloc_s": 3.7818262919900008,
+ "after_hog_alloc": {
+  "footprint_mb": 1260,
+  "swap_used_mb": 8383.94,
+  "swapouts_mb": 78725.421875,
+  "swapins_mb": 60090.296875,
+  "compressions_mb": 2142917.65625,
+  "purged_mb": 247563.828125,
+  "resident_sessions": 0
+ },
+ "hog_retouch_idle_s": 2.3043282910075504,
+ "after_retouch_idle": {
+  "footprint_mb": 1260,
+  "swap_used_mb": 8749.12,
+  "swapouts_mb": 78997.421875,
+  "swapins_mb": 60104.328125,
+  "compressions_mb": 2142917.65625,
+  "purged_mb": 247564.265625,
+  "resident_sessions": 0
+ },
+ "resume_ttft_s": [
+  24.921,
+  26.927,
+  22.342,
+  23.084,
+  24.165,
+  27.553,
+  24.539,
+  23.876,
+  23.729,
+  30.129,
+  26.93,
+  23.622
+ ],
+ "resume_outcome": [
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute",
+  "recompute"
+ ],
+ "outputs_match_reference": true,
+ "after_resume": {
+  "footprint_mb": 1336,
+  "swap_used_mb": 11016.19,
+  "swapouts_mb": 88278.859375,
+  "swapins_mb": 66716.734375,
+  "compressions_mb": 2195377.03125,
+  "purged_mb": 251866.90625,
+  "resident_sessions": 0
+ },
+ "hog_retouch_after_resume_s": 46.86436249999679,
+ "after_retouch_resume": {
+  "footprint_mb": 1266,
+  "swap_used_mb": 8833.81,
+  "swapouts_mb": 93617.296875,
+  "swapins_mb": 74220.09375,
+  "compressions_mb": 2207342.8125,
+  "purged_mb": 251904.578125,
+  "resident_sessions": 0
+ },
+ "delta_app_open": {
+  "swapouts_mb": 1879,
+  "swapins_mb": 20,
+  "purged_mb": 2121
+ },
+ "delta_resume": {
+  "swapouts_mb": 14620,
+  "swapins_mb": 14116,
+  "purged_mb": 4340
+ }
+}

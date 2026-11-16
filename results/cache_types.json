@@ -1,0 +1,36 @@
+[
+ {
+  "model": "Llama-3.2-1B-Instruct-4bit",
+  "cache_types": [
+   "KVCache"
+  ],
+  "stored_mb": 96.0,
+  "identical": true
+ },
+ {
+  "model": "Llama-3.2-1B-Instruct-4bit +q8 KV",
+  "cache_types": [
+   "QuantizedKVCache"
+  ],
+  "stored_mb": 51.0,
+  "identical": true
+ },
+ {
+  "model": "gemma-3-1b-it-4bit",
+  "cache_types": [
+   "KVCache",
+   "RotatingKVCache"
+  ],
+  "stored_mb": 43.4,
+  "identical": true
+ },
+ {
+  "model": "Qwen3.5-0.8B-4bit",
+  "cache_types": [
+   "ArraysCache",
+   "KVCache"
+  ],
+  "stored_mb": 54.6,
+  "identical": true
+ }
+]

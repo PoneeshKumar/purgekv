@@ -1,0 +1,68 @@
+[
+ {
+  "codec": "raw",
+  "new_tokens": 32,
+  "load_then_compute_ttft_s": 0.461,
+  "load_then_compute_identical": true,
+  "streamed_ttft_s": 0.29,
+  "streamed_identical": true,
+  "speedup": 1.59
+ },
+ {
+  "codec": "raw",
+  "new_tokens": 256,
+  "load_then_compute_ttft_s": 1.247,
+  "load_then_compute_identical": true,
+  "streamed_ttft_s": 0.992,
+  "streamed_identical": true,
+  "speedup": 1.26
+ },
+ {
+  "codec": "raw",
+  "new_tokens": 1024,
+  "load_then_compute_ttft_s": 4.16,
+  "load_then_compute_identical": true,
+  "streamed_ttft_s": 4.018,
+  "streamed_identical": true,
+  "speedup": 1.04
+ },
+ {
+  "codec": "q8",
+  "new_tokens": 32,
+  "load_then_compute_q8_agree": "3/6",
+  "load_then_compute_ttft_s": 0.398,
+  "streamed_q8_agree": "3/6",
+  "streamed_ttft_s": 0.214,
+  "speedup": 1.86
+ },
+ {
+  "codec": "q8",
+  "new_tokens": 256,
+  "load_then_compute_q8_agree": "6/6",
+  "load_then_compute_ttft_s": 1.206,
+  "streamed_q8_agree": "6/6",
+  "streamed_ttft_s": 1.104,
+  "speedup": 1.09
+ },
+ {
+  "codec": "q8",
+  "new_tokens": 1024,
+  "load_then_compute_q8_agree": "6/6",
+  "load_then_compute_ttft_s": 4.683,
+  "streamed_q8_agree": "6/6",
+  "streamed_ttft_s": 4.859,
+  "speedup": 0.96
+ },
+ {
+  "compute_only_s": 0.16,
+  "new_tokens": 32
+ },
+ {
+  "compute_only_s": 1.213,
+  "new_tokens": 256
+ },
+ {
+  "compute_only_s": 4.813,
+  "new_tokens": 1024
+ }
+]

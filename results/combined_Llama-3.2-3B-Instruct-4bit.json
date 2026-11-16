@@ -1,0 +1,54 @@
+{
+ "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
+ "chats": 4,
+ "tokens_per_chat": 6144,
+ "saves_per_chat": 9,
+ "recompute_ttft_s": 19.17,
+ "policies": {
+  "full+raw": {
+   "ssd_written_mb": 20160,
+   "vs_full_raw": 1.0,
+   "on_disk_mb": 2688,
+   "save_time_s": 8.42,
+   "resume_cold_median_s": 0.443,
+   "identical_outputs": "4/4",
+   "token_agreement": 1.0
+  },
+  "full+lz": {
+   "ssd_written_mb": 17056,
+   "vs_full_raw": 1.18,
+   "on_disk_mb": 2274,
+   "save_time_s": 30.91,
+   "resume_cold_median_s": 0.841,
+   "identical_outputs": "4/4",
+   "token_agreement": 1.0
+  },
+  "append+raw": {
+   "ssd_written_mb": 2688,
+   "vs_full_raw": 7.5,
+   "on_disk_mb": 2688,
+   "save_time_s": 1.21,
+   "resume_cold_median_s": 0.498,
+   "identical_outputs": "4/4",
+   "token_agreement": 1.0
+  },
+  "append+lz": {
+   "ssd_written_mb": 2281,
+   "vs_full_raw": 8.84,
+   "on_disk_mb": 2281,
+   "save_time_s": 3.96,
+   "resume_cold_median_s": 0.912,
+   "identical_outputs": "4/4",
+   "token_agreement": 1.0
+  },
+  "append+q8": {
+   "ssd_written_mb": 1428,
+   "vs_full_raw": 14.12,
+   "on_disk_mb": 1428,
+   "save_time_s": 1.22,
+   "resume_cold_median_s": 0.396,
+   "identical_outputs": "4/4",
+   "token_agreement": 1.0
+  }
+ }
+}

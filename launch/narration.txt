@@ -1,0 +1,13 @@
+Come back to a local AI chat on your Mac, and it has to reload its memory from the SSD first.
+Today, Mac LLM servers load that whole cache, and only then start computing. The GPU just waits.
+So we stream it. While the GPU runs one layer, the SSD is already reading the next.
+Reading and computing now happen at the same time.
+And on Apple Silicon, unified memory puts those bytes right where the GPU can use them. No copy step.
+On an M4 MacBook, resuming a six-thousand-token chat went from point four six seconds, to point two nine. One point six times faster, with bit-identical output.
+Short messages are the sweet spot. And that's exactly what AI agents send.
+Layer-streamed resume for MLX. Open source. Link below.
+
+# Regenerate the voice clips (one per line above):
+#   mkdir -p vo; i=0; while IFS= read -r l; do [ -z "$l" ] && break; i=$((i+1)); say -v Samantha -r 172 -o vo/vo$i.aiff "$l"; done < launch/narration.txt
+#   python launch/make_video2.py launch/purgekv_stream_launch.mp4 vo
+# To use your own voice, record vo1.aiff ... vo8.aiff (any length; scenes stretch to fit).

@@ -1,0 +1,90 @@
+{
+ "mode": "ram",
+ "sessions": 12,
+ "tokens": 8192,
+ "hog_gb": 8.0,
+ "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+ "kv_per_session_mb": 256.0,
+ "before_hog": {
+  "footprint_mb": 4440,
+  "swap_used_mb": 7945.69,
+  "swapouts_mb": 68293.75,
+  "swapins_mb": 50650.28125,
+  "compressions_mb": 2084310.9375,
+  "purged_mb": 242936.265625
+ },
+ "hog_alloc_s": 4.278061749995686,
+ "after_hog_alloc": {
+  "footprint_mb": 4329,
+  "swap_used_mb": 11220.44,
+  "swapouts_mb": 71602.1875,
+  "swapins_mb": 50678.0625,
+  "compressions_mb": 2097525.265625,
+  "purged_mb": 242978.609375
+ },
+ "hog_retouch_idle_s": 16.731036708020838,
+ "after_retouch_idle": {
+  "footprint_mb": 4329,
+  "swap_used_mb": 11190.19,
+  "swapouts_mb": 74650.25,
+  "swapins_mb": 53773.96875,
+  "compressions_mb": 2104373.6875,
+  "purged_mb": 242997.796875
+ },
+ "resume_ttft_s": [
+  4.979,
+  1.674,
+  0.941,
+  0.779,
+  0.776,
+  0.758,
+  1.114,
+  0.832,
+  0.769,
+  0.833,
+  0.535,
+  0.734
+ ],
+ "resume_outcome": [
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit",
+  "hit"
+ ],
+ "outputs_match_reference": true,
+ "after_resume": {
+  "footprint_mb": 1966,
+  "swap_used_mb": 9422.75,
+  "swapouts_mb": 76614.703125,
+  "swapins_mb": 57199.734375,
+  "compressions_mb": 2107309.265625,
+  "purged_mb": 243003.171875
+ },
+ "hog_retouch_after_resume_s": 3.5148779589799233,
+ "after_retouch_resume": {
+  "footprint_mb": 1536,
+  "swap_used_mb": 9062.75,
+  "swapouts_mb": 76614.703125,
+  "swapins_mb": 57569.625,
+  "compressions_mb": 2107309.265625,
+  "purged_mb": 243003.171875
+ },
+ "delta_app_open": {
+  "swapouts_mb": 6356,
+  "swapins_mb": 3124,
+  "purged_mb": 62
+ },
+ "delta_resume": {
+  "swapouts_mb": 1964,
+  "swapins_mb": 3796,
+  "purged_mb": 5
+ }
+}
