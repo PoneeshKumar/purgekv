@@ -1,0 +1,20 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ruff:
+    # Tests need an Apple Silicon GPU (MLX + Metal), which hosted runners don't
+    # provide, so CI checks style and syntax; run `pytest` locally on a Mac.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff==0.17.5
+      - run: ruff check .
+      - run: python -m compileall -q purgekv examples research tests
