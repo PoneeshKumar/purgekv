@@ -27,6 +27,9 @@ Homepage = "https://github.com/PoneeshKumar/purgekv"
 [tool.setuptools]
 packages = ["purgekv"]
 
+[tool.setuptools.package-data]
+purgekv = ["native/*.cpp"]  # compiled on first use by reader="native"
+
 [tool.ruff]
 line-length = 120
 
@@ -35,3 +38,4 @@ select = ["F", "E9"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]

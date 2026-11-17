@@ -15,6 +15,8 @@ import mlx.core as mx
 from mlx_lm.models.base import create_attention_mask
 from mlx_lm.models.cache import KVCache
 
+from . import fastread
+
 F_NOCACHE = 48
 _pool = ThreadPoolExecutor(4)
 
@@ -89,16 +91,42 @@ def _logits(model, h):
     return model.lm_head(h)
 
 
-def load_then_compute(model, store, key, tokens):
+READERS = ("legacy", "single", "native")
+
+
+def _submit_reads(store, layout, n_layers, n_new, reader):
+    """Start reading every layer on the I/O threads. Threads only touch numpy;
+    MLX arrays are created on the calling thread."""
+    if reader not in READERS:
+        raise ValueError(f"reader must be one of {READERS}")
+    if store.codec == "lz":
+        raise NotImplementedError("streaming reads raw or q8 segments; use store.load() for codec='lz'")
+    if reader != "legacy" and store.codec != "raw":
+        reader = "legacy"  # the single-copy readers need raw (uncompressed) segments
+    if reader == "legacy":
+        return reader, [_pool.submit(_read_layer, layout, i) for i in range(n_layers)]
+    return reader, [_pool.submit(fastread.read_layer, layout, i, n_new, reader) for i in range(n_layers)]
+
+
+def _fill(c, result, reader, codec, dtype):
+    """Install one layer's K/V into cache c."""
+    if reader == "legacy":
+        c.keys, c.values = _build_layer(result, codec, dtype)
+        c.offset = c.keys.shape[2]
+    else:  # one pre-sized buffer per tensor, with room for the new tokens: no realloc later
+        kb, vb, n_ctx = result
+        c.keys, c.values, c.offset = mx.array(kb).view(dtype), mx.array(vb).view(dtype), n_ctx
+
+
+def load_then_compute(model, store, key, tokens, reader="legacy"):
     """Baseline with identical I/O code: read every layer, then run the forward pass."""
     layout = _layout(store, key)
     n_layers = len(model.model.layers)
-    futs = [_pool.submit(_read_layer, layout, i) for i in range(n_layers)]
+    reader, futs = _submit_reads(store, layout, n_layers, len(tokens), reader)
     caches = []
     for f in futs:
         c = KVCache()
-        c.keys, c.values = _build_layer(f.result(), store.codec, layout[0][2])
-        c.offset = c.keys.shape[2]
+        _fill(c, f.result(), reader, store.codec, layout[0][2])
         caches.append(c)
     mx.eval([x for c in caches for x in (c.keys, c.values)])
     logits = model(mx.array(tokens)[None], cache=caches)
@@ -120,13 +148,16 @@ def check_supported(model):
             raise NotImplementedError(f"cache types {sorted(kinds)} are not supported yet (only KVCache)")
 
 
-def stream_prefill(model, store, key, tokens):
-    """Resume a session: run the new tokens through the model while KV streams in per layer."""
+def stream_prefill(model, store, key, tokens, reader="legacy"):
+    """Resume a session: run the new tokens through the model while KV streams in per layer.
+
+    reader="legacy" builds per-segment arrays; "single" (Python) and "native" (C++) read
+    each layer straight into one pre-sized buffer (raw codec only; others fall back)."""
     check_supported(model)
     layout = _layout(store, key)
     inner = model.model
     n_layers = len(inner.layers)
-    futs = [_pool.submit(_read_layer, layout, i) for i in range(n_layers)]  # I/O starts now
+    reader, futs = _submit_reads(store, layout, n_layers, len(tokens), reader)  # I/O starts now
     n_ctx = store.sessions[key]["saved"]
     caches = []
     for _ in range(n_layers):
@@ -134,7 +165,7 @@ def stream_prefill(model, store, key, tokens):
     h = inner.embed_tokens(mx.array(tokens)[None])
     mask = create_attention_mask(h, caches[0])
     for layer, c, f in zip(inner.layers, caches, futs):
-        c.keys, c.values = _build_layer(f.result(), store.codec, layout[0][2])
+        _fill(c, f.result(), reader, store.codec, layout[0][2])
         h = layer(h, mask, cache=c)
         mx.async_eval(h)  # GPU runs this layer while we wait for the next layer's bytes
     return caches, _logits(model, h)[:, -1, :]
