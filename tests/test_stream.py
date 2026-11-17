@@ -45,3 +45,21 @@ def test_unsupported_models_are_refused(model_id):
     model, _ = load(model_id)
     with pytest.raises(NotImplementedError):
         check_supported(model)
+
+
+@pytest.mark.parametrize("model_id", SUPPORTED)
+def test_prefetched_resume_is_identical(tmp_path, model_id):
+    from mlx_lm import load
+    from purgekv.common import real_text_tokens, prefill, greedy
+    from purgekv.segstore import SegmentKVStore
+    from purgekv.stream import stream_prefill, prefetch
+
+    model, tok = load(model_id)
+    store = SegmentKVStore(str(tmp_path))
+    cache, _ = prefill(model, real_text_tokens(tok, 1200, 1))
+    store.save("c", cache)
+    new = real_text_tokens(tok, 24, 3)
+    p = prefetch(model, store, "c")  # e.g. when the user opens the chat
+    b, lb = stream_prefill(model, store, "c", new, prefetched=p)
+    ref, lr = prefill(model, new, copy.deepcopy(cache))
+    assert greedy(model, b, lb, 12) == greedy(model, ref, lr, 12)

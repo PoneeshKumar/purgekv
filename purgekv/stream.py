@@ -148,16 +148,41 @@ def check_supported(model):
             raise NotImplementedError(f"cache types {sorted(kinds)} are not supported yet (only KVCache)")
 
 
-def stream_prefill(model, store, key, tokens, reader="legacy"):
+class Prefetch:
+    """Reads a session's KV from SSD in the background, e.g. as soon as the user opens a
+    chat or starts typing. Pass it to stream_prefill(prefetched=...): layers already read
+    cost nothing, so a resume after enough think time is compute-only."""
+
+    def __init__(self, store, key, n_layers, headroom=512, reader="single"):
+        self.key = key
+        self.layout = _layout(store, key)
+        self.reader, self.futs = _submit_reads(store, self.layout, n_layers, headroom, reader)
+
+    def done(self):
+        return all(f.done() for f in self.futs)
+
+
+def prefetch(model, store, key, headroom=512, reader="single"):
+    """Start reading `key` now; headroom = room for the new message's tokens."""
+    return Prefetch(store, key, len(model.model.layers), headroom, reader)
+
+
+def stream_prefill(model, store, key, tokens, reader="legacy", prefetched=None):
     """Resume a session: run the new tokens through the model while KV streams in per layer.
 
     reader="legacy" builds per-segment arrays; "single" (Python) and "native" (C++) read
-    each layer straight into one pre-sized buffer (raw codec only; others fall back)."""
+    each layer straight into one pre-sized buffer (raw codec only; others fall back).
+    prefetched: a Prefetch for this key, started earlier (its reader is used)."""
     check_supported(model)
-    layout = _layout(store, key)
     inner = model.model
     n_layers = len(inner.layers)
-    reader, futs = _submit_reads(store, layout, n_layers, len(tokens), reader)  # I/O starts now
+    if prefetched is not None:
+        if prefetched.key != key:
+            raise ValueError("prefetched is for a different session")
+        layout, reader, futs = prefetched.layout, prefetched.reader, prefetched.futs
+    else:
+        layout = _layout(store, key)
+        reader, futs = _submit_reads(store, layout, n_layers, len(tokens), reader)  # I/O starts now
     n_ctx = store.sessions[key]["saved"]
     caches = []
     for _ in range(n_layers):
