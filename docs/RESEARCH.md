@@ -149,6 +149,60 @@ stage. Same I/O code in both arms; cold SSD reads; 3B model, 6K-token history in
 * Novelty: layer-wise KV loading is established on NVIDIA servers (LMCache, CachedAttention). I found no Mac/MLX implementation. This is a port that fits Apple Silicon, not a new concept.
 * Limits: Llama-style models and the standard KV cache only; one machine.
 
+### I. Large chats: 8K–64K tokens, measured (`research/bench_scale.py`)
+M4 MacBook, 16 GB, battery, Low Power Mode off. Real text, saved every 4096 tokens
+(as a long conversation would be), cold SSD reads, median of 3. "Today" is
+load-then-compute with the legacy reader; streamed and prefetched use the single-copy
+reader. Every resume, every reader, every size: output identical to the cache that
+never left memory.
+
+**Llama 3.2 3B** (112 KB of KV per token)
+
+| History | KV | Recompute | Today, 32-tok msg | Streamed | **Prefetched** | Today, 256-tok msg | Streamed | Prefetched |
+|---|---|---|---|---|---|---|---|---|
+| 8K | 0.9 GB | 27 s | 0.54 s | 0.32 s | **0.15 s** | 1.37 s | 1.02 s | 0.99 s |
+| 16K | 1.9 GB | 62 s | 0.96 s | 0.63 s | **0.21 s** | 2.02 s | 1.37 s | 1.28 s |
+| 32K | 3.8 GB | 169 s | 1.80 s | 1.40 s | **0.31 s** | 3.56 s | 2.08 s | 1.87 s |
+
+**Llama 3.2 1B** (32 KB of KV per token)
+
+| History | KV | Recompute | Today, 32-tok msg | Streamed | **Prefetched** | Today, 256-tok msg | Streamed | Prefetched |
+|---|---|---|---|---|---|---|---|---|
+| 8K | 0.3 GB | 10 s | 0.16 s | 0.10 s | **0.06 s** | 0.48 s | 0.41 s | 0.39 s |
+| 16K | 0.5 GB | 25 s | 0.31 s | 0.19 s | **0.09 s** | 0.73 s | 0.55 s | 0.51 s |
+| 32K | 1.1 GB | 69 s | 0.57 s | 0.40 s | **0.12 s** | 1.16 s | 0.82 s | 0.72 s |
+| 64K | 2.2 GB | 205 s | 1.06 s | 0.80 s | **0.19 s** | 2.06 s | 1.37 s | 1.17 s |
+
+* **Prefetch is the big one.** Reading the cache while the user types makes a short-message resume compute-only: 4.8–5.8× faster than today at 32–64K.
+* **Streaming alone** gives 1.3–1.7× at large sizes. For short messages on big chats the SSD read dominates, so the 32-token gain shrinks (1.3× at 32K); for 256-token messages it grows (1.7×).
+* **Single-copy reader:** at 32K (3B) it loaded 21% faster than the legacy reader (1.30 s vs 1.64 s) and lowered peak GPU memory from 7.1 GB to 5.8 GB for load-then-compute. With streaming at 64K (1B), peak fell from 4.4 GB (today) to 3.0 GB.
+* **C++ reader:** within 3% of the Python reader everywhere. Python's `preadv` already releases the GIL, so native code buys nothing here.
+* **Memory is the real ceiling, not speed.** 3B at 64K (7.3 GB of KV) was not attempted: weights plus cache plus one transient copy would exceed the ~12.7 GB GPU working set.
+
+**Shared cached prompt** (3B): one 32K-token prompt, four chats forked from it with
+256 tokens each. Disk: **3.9 GB vs 15.2 GB** if each chat stored its own copy; all four
+resumed with identical output (1.3–2.1 s).
+
+**The estimate holds up.** `research/scale_estimate.py --fit` fits SSD speed and a
+compute model to these runs; its predictions land within 1–10% of the measured
+streamed times. Use it for Macs and sizes not measured here, labelled as an estimate.
+
+**Correction to Exp H:** its "compute-only" baseline (1.21 s for 256 tokens) was slower
+than the full streamed resume (0.99 s), which is impossible. That baseline started from a
+cache rebuilt at exactly its own size, so the first new token forced a full-layer
+reallocation inside the timing. bench_scale.py measures compute on the live cache and
+trims it back, with no copy.
+
+### J. Other 16 GB inefficiencies, measured (`research/probe_16gb.py`)
+Synthetic 2 GB cache shaped like Llama 3.2 3B, cold reads, median of 3.
+
+| Suspected problem | Measured | Verdict |
+|---|---|---|
+| purgekv's reader leaves SSD speed unused | 2.57 GB/s (C++: 2.82) vs 3.19 GB/s best plain parallel read (32 MB × 4 threads) | **Real, ~12–20%.** Worth tuning read size and threads. |
+| Many small segments slow resume | 64 segments 0.77 s vs 1 segment 0.63 s (+23%); compacted 0.64 s | **Real, fixed** by `store.compact()`. A smaller 0.5 GB run showed 6×, where segments were tiny. |
+| save() doubles memory and stalls | +14% time vs a raw write; +0.14 GB process memory | Minor. Not worth fixing now. |
+| MLX keeps freed memory after a resume | 0.0 GB held | **Not a problem.** |
+
 ## Conclusions
 1. **For a local LLM server on a Mac: write idle KV caches to SSD and drop them from RAM.**
    This removed the swap storm completely and resumed fastest. It's simple, and it's

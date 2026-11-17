@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.0 — 2026-11-16
+
+Large chats, measured on an M4 MacBook (16 GB) up to 64K tokens.
+
+### Added
+- **Prefetch** (`prefetch()` + `stream_prefill(prefetched=...)`): read a chat's KV while
+  the user types; resume becomes compute-only. 3B at 32K tokens: 1.80 s → 0.31 s (5.8×).
+- **Single-copy reader** (`reader="single"`, now the default for `stream_prefill`): one
+  scatter read per segment into a pre-sized buffer. At 32K (3B): 21% faster loads and
+  peak GPU memory 7.1 → 5.8 GB. A C++ twin (`reader="native"`) measured no faster.
+- **Shared cached prompts:** `store.fork(src, dst)` starts chats from one cached prompt
+  without copying it (4 chats on a 32K prompt: 3.9 GB instead of 15.2 GB on disk).
+- **Restart-safe index:** `store.save_index()` / `SegmentKVStore.open(root)`.
+- **Compaction:** `store.compact(key)` merges a chat's small segments while it is idle.
+- Benchmarks: `research/bench_scale.py` (8K–64K), `research/probe_16gb.py`,
+  `research/scale_estimate.py` (fitted to measurements; within 1–10% of them).
+
+### Fixed
+- Streaming with `codec="lz"` read compressed bytes as if they were raw; it now raises
+  a clear error.
+- Exp H's compute-only baseline included a full-layer reallocation (see RESEARCH.md).
+
 ## 0.1.0 — 2026-11-16
 
 First release.
