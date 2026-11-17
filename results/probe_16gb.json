@@ -1,0 +1,41 @@
+{
+ "tokens": 17408,
+ "cache_gb": 2.0,
+ "ssd_gbps": {
+  "purgekv_single_reader": 2.57,
+  "purgekv_native_reader": 2.82,
+  "plain_1MB_x1": 2.07,
+  "plain_1MB_x2": 2.18,
+  "plain_1MB_x4": 2.63,
+  "plain_1MB_x8": 2.81,
+  "plain_1MB_x16": 2.79,
+  "plain_8MB_x1": 2.84,
+  "plain_8MB_x2": 2.83,
+  "plain_8MB_x4": 3.13,
+  "plain_8MB_x8": 3.1,
+  "plain_8MB_x16": 3.07,
+  "plain_32MB_x1": 2.87,
+  "plain_32MB_x2": 2.99,
+  "plain_32MB_x4": 3.19,
+  "plain_32MB_x8": 3.16,
+  "plain_32MB_x16": 3.12
+ },
+ "segments_load_s": {
+  "1": 0.628,
+  "8": 0.67,
+  "64": 0.77,
+  "64_then_compacted": 0.642
+ },
+ "compact_seconds": 4.94,
+ "save": {
+  "seconds": 1.612,
+  "write_gbps": 1.24,
+  "process_peak_rise_gb": 0.14,
+  "direct_write_seconds": 1.41
+ },
+ "retained": {
+  "cache_memory_gb_after_resume": 0.0,
+  "baseline_gb": 0.0,
+  "after_clear_cache_gb": 0.0
+ }
+}

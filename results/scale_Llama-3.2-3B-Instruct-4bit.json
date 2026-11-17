@@ -1,0 +1,244 @@
+{
+ "info": {
+  "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
+  "weights_gb": 1.81,
+  "gpu_budget_gb": 12.71,
+  "kv_bytes_per_token": 114688,
+  "chip": "Apple M4",
+  "ram_gb": 16
+ },
+ "rows": [
+  {
+   "hist": 8192,
+   "kv_gb": 0.94,
+   "need_gb": 4.37,
+   "build_s": 27.060869915992953,
+   "segments": 2,
+   "compute_s": {
+    "32": 0.142,
+    "256": 0.986
+   },
+   "load_s": {
+    "legacy": 0.371,
+    "single": 0.301,
+    "native": 0.303
+   },
+   "ttft": {
+    "load_then_compute/legacy/32": 0.544,
+    "load_then_compute/single/32": 0.45,
+    "load_then_compute/native/32": 0.454,
+    "streamed/legacy/32": 0.333,
+    "streamed/single/32": 0.319,
+    "streamed/native/32": 0.319,
+    "prefetched/single/32": 0.145,
+    "load_then_compute/legacy/256": 1.365,
+    "load_then_compute/single/256": 1.304,
+    "load_then_compute/native/256": 1.301,
+    "streamed/legacy/256": 1.068,
+    "streamed/single/256": 1.02,
+    "streamed/native/256": 1.039,
+    "prefetched/single/256": 0.991
+   },
+   "peak_gb": {
+    "load_then_compute/legacy/32": 3.55,
+    "load_then_compute/single/32": 3.02,
+    "load_then_compute/native/32": 3.02,
+    "streamed/legacy/32": 3.02,
+    "streamed/single/32": 2.9,
+    "streamed/native/32": 2.88,
+    "load_then_compute/legacy/256": 3.49,
+    "load_then_compute/single/256": 3.1,
+    "load_then_compute/native/256": 3.1,
+    "streamed/legacy/256": 3.81,
+    "streamed/single/256": 3.1,
+    "streamed/native/256": 3.1
+   },
+   "identical": {
+    "load_then_compute/legacy/32": true,
+    "load_then_compute/single/32": true,
+    "load_then_compute/native/32": true,
+    "streamed/legacy/32": true,
+    "streamed/single/32": true,
+    "streamed/native/32": true,
+    "prefetched/single/32": true,
+    "load_then_compute/legacy/256": true,
+    "load_then_compute/single/256": true,
+    "load_then_compute/native/256": true,
+    "streamed/legacy/256": true,
+    "streamed/single/256": true,
+    "streamed/native/256": true,
+    "prefetched/single/256": true
+   },
+   "speedup_streamed_vs_legacy": {
+    "legacy/32": 1.63,
+    "single/32": 1.71,
+    "native/32": 1.71,
+    "legacy/256": 1.28,
+    "single/256": 1.34,
+    "native/256": 1.31
+   },
+   "status": "ok"
+  },
+  {
+   "hist": 16384,
+   "kv_gb": 1.88,
+   "need_gb": 6.44,
+   "build_s": 62.45308804200613,
+   "segments": 4,
+   "compute_s": {
+    "32": 0.182,
+    "256": 1.256
+   },
+   "load_s": {
+    "legacy": 0.718,
+    "single": 0.612,
+    "native": 0.605
+   },
+   "ttft": {
+    "load_then_compute/legacy/32": 0.962,
+    "load_then_compute/single/32": 0.834,
+    "load_then_compute/native/32": 0.802,
+    "streamed/legacy/32": 0.668,
+    "streamed/single/32": 0.628,
+    "streamed/native/32": 0.614,
+    "prefetched/single/32": 0.206,
+    "load_then_compute/legacy/256": 2.024,
+    "load_then_compute/single/256": 1.887,
+    "load_then_compute/native/256": 1.876,
+    "streamed/legacy/256": 1.449,
+    "streamed/single/256": 1.373,
+    "streamed/native/256": 1.437,
+    "prefetched/single/256": 1.284
+   },
+   "peak_gb": {
+    "load_then_compute/legacy/32": 4.86,
+    "load_then_compute/single/32": 3.87,
+    "load_then_compute/native/32": 3.87,
+    "streamed/legacy/32": 3.94,
+    "streamed/single/32": 3.82,
+    "streamed/native/32": 3.82,
+    "load_then_compute/legacy/256": 4.82,
+    "load_then_compute/single/256": 3.92,
+    "load_then_compute/native/256": 3.92,
+    "streamed/legacy/256": 4.35,
+    "streamed/single/256": 4.05,
+    "streamed/native/256": 4.05
+   },
+   "identical": {
+    "load_then_compute/legacy/32": true,
+    "load_then_compute/single/32": true,
+    "load_then_compute/native/32": true,
+    "streamed/legacy/32": true,
+    "streamed/single/32": true,
+    "streamed/native/32": true,
+    "prefetched/single/32": true,
+    "load_then_compute/legacy/256": true,
+    "load_then_compute/single/256": true,
+    "load_then_compute/native/256": true,
+    "streamed/legacy/256": true,
+    "streamed/single/256": true,
+    "streamed/native/256": true,
+    "prefetched/single/256": true
+   },
+   "speedup_streamed_vs_legacy": {
+    "legacy/32": 1.44,
+    "single/32": 1.53,
+    "native/32": 1.57,
+    "legacy/256": 1.4,
+    "single/256": 1.47,
+    "native/256": 1.41
+   },
+   "status": "ok"
+  },
+  {
+   "hist": 32768,
+   "kv_gb": 3.76,
+   "need_gb": 10.58,
+   "build_s": 169.07441916698008,
+   "segments": 8,
+   "compute_s": {
+    "32": 0.27,
+    "256": 1.911
+   },
+   "load_s": {
+    "legacy": 1.642,
+    "single": 1.3,
+    "native": 1.262
+   },
+   "ttft": {
+    "load_then_compute/legacy/32": 1.796,
+    "load_then_compute/single/32": 1.581,
+    "load_then_compute/native/32": 1.584,
+    "streamed/legacy/32": 1.381,
+    "streamed/single/32": 1.401,
+    "streamed/native/32": 1.386,
+    "prefetched/single/32": 0.308,
+    "load_then_compute/legacy/256": 3.56,
+    "load_then_compute/single/256": 3.357,
+    "load_then_compute/native/256": 3.316,
+    "streamed/legacy/256": 2.241,
+    "streamed/single/256": 2.084,
+    "streamed/native/256": 2.107,
+    "prefetched/single/256": 1.872
+   },
+   "peak_gb": {
+    "load_then_compute/legacy/32": 7.14,
+    "load_then_compute/single/32": 5.76,
+    "load_then_compute/native/32": 5.76,
+    "streamed/legacy/32": 5.96,
+    "streamed/single/32": 5.71,
+    "streamed/native/32": 5.71,
+    "load_then_compute/legacy/256": 7.1,
+    "load_then_compute/single/256": 5.8,
+    "load_then_compute/native/256": 5.8,
+    "streamed/legacy/256": 6.32,
+    "streamed/single/256": 5.8,
+    "streamed/native/256": 5.8
+   },
+   "identical": {
+    "load_then_compute/legacy/32": true,
+    "load_then_compute/single/32": true,
+    "load_then_compute/native/32": true,
+    "streamed/legacy/32": true,
+    "streamed/single/32": true,
+    "streamed/native/32": true,
+    "prefetched/single/32": true,
+    "load_then_compute/legacy/256": true,
+    "load_then_compute/single/256": true,
+    "load_then_compute/native/256": true,
+    "streamed/legacy/256": true,
+    "streamed/single/256": true,
+    "streamed/native/256": true,
+    "prefetched/single/256": true
+   },
+   "speedup_streamed_vs_legacy": {
+    "legacy/32": 1.3,
+    "single/32": 1.28,
+    "native/32": 1.3,
+    "legacy/256": 1.59,
+    "single/256": 1.71,
+    "native/256": 1.69
+   },
+   "status": "ok"
+  }
+ ],
+ "shared": {
+  "prompt_tokens": 32768,
+  "chats": 4,
+  "own_tokens": 256,
+  "ttft": [
+   2.066,
+   1.357,
+   1.318,
+   1.307
+  ],
+  "identical": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "disk_gb": 3.876,
+  "disk_gb_if_copied": 15.15
+ }
+}

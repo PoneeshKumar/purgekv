@@ -17,5 +17,9 @@ for rep in 1 2 3; do                                                    # B: mem
 done
 $PY research/bench_compress.py mlx-community/Llama-3.2-1B-Instruct-4bit mlx-community/Qwen3.5-0.8B-4bit   # E
 $PY research/bench_combined.py                                                   # F: combined SSD tier
-$PY research/bench_stream.py                                                     # H: layer-streamed resume
+$PY research/bench_stream.py                                            # H
+$PY research/probe_16gb.py                                              # J: 16 GB inefficiencies
+$PY research/bench_scale.py --shared-chats 4                            # I: 3B, 8K-32K
+$PY research/bench_scale.py --model mlx-community/Llama-3.2-1B-Instruct-4bit --hist 8192,16384,32768,65536   # I: 1B to 64K
+#                                                     # H: layer-streamed resume
 python3 research/estimate_studio.py                                              # G: Mac Studio estimate
