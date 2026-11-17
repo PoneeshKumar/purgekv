@@ -63,3 +63,65 @@ def test_lz_codec_round_trip(dtype):
     raw = (vals.astype(np.float16) if dtype is np.float16 else (vals.view(np.uint32) >> 16).astype(np.uint16)).view(np.uint8)
     out = lz_unpack(lz_pack(raw), raw.size)
     assert np.array_equal(out, raw)
+
+
+def _disk(path):
+    return sum(f.stat().st_size for f in path.iterdir() if f.suffix != ".json")
+
+
+def _branch(prompt_cache, n, seed):
+    """Copy a cache (sharing nothing) and append n tokens, as a chat continuing a prompt."""
+    c = []
+    for p in prompt_cache:
+        x = KVCache()
+        x.update_and_fetch(p.keys[..., :p.offset, :], p.values[..., :p.offset, :])
+        c.append(x)
+    return grow(c, n, seed)
+
+
+def test_fork_shares_the_prompt_on_disk(tmp_path):
+    store = SegmentKVStore(str(tmp_path))
+    prompt = grow([KVCache() for _ in range(LAYERS)], 1000, 10)
+    store.save("doc", prompt)
+    prompt_bytes = _disk(tmp_path)
+    chats = []
+    for i in range(3):
+        store.fork("doc", f"chat{i}")
+        c = _branch(prompt, 50, 20 + i)
+        store.save(f"chat{i}", c)
+        chats.append(c)
+    per_token = prompt_bytes / 1000
+    assert _disk(tmp_path) == prompt_bytes + 3 * 50 * per_token  # prompt stored once
+    for i, c in enumerate(chats):
+        for (k, v), r in zip(live(c), store.load(f"chat{i}")):
+            assert mx.array_equal(k, r.keys).item() and mx.array_equal(v, r.values).item()
+
+
+def test_rewrite_and_delete_keep_shared_prompt(tmp_path):
+    store = SegmentKVStore(str(tmp_path), append=False)  # full-rewrite mode
+    prompt = grow([KVCache() for _ in range(LAYERS)], 300, 30)
+    store.save("doc", prompt)
+    store.fork("doc", "chat")
+    store.save("chat", _branch(prompt, 40, 31))  # rewrite would have deleted doc's file
+    store.delete("chat")
+    for (k, _), r in zip(live(prompt), store.load("doc")):
+        assert mx.array_equal(k, r.keys).item()
+    store.delete("doc")
+    assert _disk(tmp_path) == 0
+
+
+@pytest.mark.parametrize("codec", ["raw", "lz", "q8"])
+def test_index_survives_restart(tmp_path, codec):
+    store = SegmentKVStore(str(tmp_path), codec=codec)
+    cache = grow([KVCache() for _ in range(LAYERS)], 200, 40, mx.bfloat16)
+    store.save("s", cache)
+    grow(cache, 30, 41, mx.bfloat16)
+    store.save("s", cache)
+    store.save_index()
+    del store
+    reopened = SegmentKVStore.open(str(tmp_path))  # e.g. a new process
+    restored = reopened.load("s")
+    assert restored[0].offset == 230 and restored[0].keys.dtype == mx.bfloat16
+    for (k, _), r in zip(live(cache), restored):
+        ok = mx.array_equal(k, r.keys).item() if codec != "q8" else mx.abs(k - r.keys).max().item() < 0.05
+        assert ok

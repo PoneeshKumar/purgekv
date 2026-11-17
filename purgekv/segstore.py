@@ -3,7 +3,7 @@
   * codec per segment: "raw", "lz" (lossless split-plane LZFSE) or "q8" (8-bit affine, lossy)
   * page-cache bypass (F_NOCACHE) on write and read so measured resumes are true SSD reads
 """
-import fcntl, os
+import fcntl, json, os
 from concurrent.futures import ThreadPoolExecutor
 import ctypes
 import numpy as np
@@ -74,6 +74,27 @@ def _read(path):
     return buf
 
 
+INDEX = "index.json"
+
+
+def _meta_to_json(meta):
+    m = dict(meta)
+    m["dtype"] = str(meta["dtype"]).split(".")[-1]
+    if "qdtypes" in m:
+        m["qdtypes"] = [[str(d).split(".")[-1] for d in t] for t in meta["qdtypes"]]
+    return m
+
+
+def _meta_from_json(m):
+    m = dict(m)
+    m["dtype"] = getattr(mx, m["dtype"])
+    m["shapes"] = [tuple(s) for s in m["shapes"]]
+    if "qdtypes" in m:
+        m["qdtypes"] = [[getattr(mx, d) for d in t] for t in m["qdtypes"]]
+        m["qshapes"] = [[tuple(s) for s in t] for t in m["qshapes"]]
+    return m
+
+
 class SegmentKVStore:
     def __init__(self, root, codec="raw", append=True):
         self.root, self.codec, self.append = root, codec, append
@@ -81,15 +102,57 @@ class SegmentKVStore:
         self.sessions = {}  # key -> {"saved": n_tokens, "segs": [(path, meta)]}
         self.bytes_written = 0
 
+    # ---- shared cached prompts -------------------------------------------------
+    def fork(self, src, dst):
+        """Start session `dst` from cached session `src` (e.g. a long system prompt or
+        document) without copying it: dst references src's segment files and later
+        saves to dst write only dst's own new tokens."""
+        s = self.sessions[src]
+        self.sessions[dst] = {"saved": s["saved"], "segs": list(s["segs"])}
+
+    def _referenced(self, path, ignore=None):
+        return any(path == p for k, s in self.sessions.items() if k != ignore for p, _ in s["segs"])
+
+    def delete(self, key):
+        """Forget a session; remove only the segment files no other session uses."""
+        s = self.sessions.pop(key, None)
+        for p, _ in (s or {}).get("segs", []):
+            if not self._referenced(p) and os.path.exists(p):
+                os.remove(p)
+
+    # ---- survive a restart -----------------------------------------------------
+    def save_index(self):
+        """Write the session index to <root>/index.json (atomically)."""
+        data = {"codec": self.codec, "append": self.append, "sessions": {
+            k: {"saved": s["saved"],
+                "segs": [(os.path.relpath(p, self.root), _meta_to_json(m)) for p, m in s["segs"]]}
+            for k, s in self.sessions.items()}}
+        tmp = os.path.join(self.root, INDEX + ".tmp")
+        with open(tmp, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, os.path.join(self.root, INDEX))
+
+    @classmethod
+    def open(cls, root):
+        """Reopen a store written by save_index(), e.g. after the process restarted."""
+        with open(os.path.join(root, INDEX)) as f:
+            data = json.load(f)
+        store = cls(root, data["codec"], data["append"])
+        store.sessions = {k: {"saved": s["saved"],
+                              "segs": [(os.path.join(root, p), _meta_from_json(m)) for p, m in s["segs"]]}
+                          for k, s in data["sessions"].items()}
+        return store
+
     def save(self, key, cache):
         """Persist tokens not yet saved (or everything, if append=False)."""
         s = self.sessions.setdefault(key, {"saved": 0, "segs": []})
         n = cache[0].offset
         start = s["saved"] if self.append else 0
         if not self.append:
-            for p, _ in s["segs"]:
-                os.remove(p)
-            s["segs"] = []
+            old, s["segs"] = s["segs"], []
+            for p, _ in old:  # a full rewrite must never delete a shared prompt's files
+                if not self._referenced(p) and os.path.exists(p):
+                    os.remove(p)
         if n <= start:
             return 0
         layers = []
