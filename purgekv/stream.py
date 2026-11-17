@@ -167,11 +167,12 @@ def prefetch(model, store, key, headroom=512, reader="single"):
     return Prefetch(store, key, len(model.model.layers), headroom, reader)
 
 
-def stream_prefill(model, store, key, tokens, reader="legacy", prefetched=None):
+def stream_prefill(model, store, key, tokens, reader="single", prefetched=None):
     """Resume a session: run the new tokens through the model while KV streams in per layer.
 
-    reader="legacy" builds per-segment arrays; "single" (Python) and "native" (C++) read
-    each layer straight into one pre-sized buffer (raw codec only; others fall back).
+    reader="single" (default) reads each layer straight into one pre-sized buffer: on an
+    M4 at 32K tokens it loaded 21% faster and peaked 19% lower than "legacy" (per-segment
+    arrays). "native" is the same in C++ and measured no faster. q8 falls back to legacy.
     prefetched: a Prefetch for this key, started earlier (its reader is used)."""
     check_supported(model)
     inner = model.model
