@@ -61,3 +61,13 @@ def test_native_matches_python_on_scattered_reads(tmp_path):
     fastread.read_python(jobs, a)
     fastread.read_native(jobs, b)
     assert np.array_equal(a, b) and np.array_equal(a[:, :, :1000], data)
+
+
+@pytest.mark.parametrize("backend", ["single", "native"])
+def test_reader_after_compaction(store, backend):
+    s, cache = store
+    s.compact("c")
+    layout = _layout(s, "c")
+    for i, (k, _) in enumerate(live(cache)):
+        kb, _, n = fastread.read_layer(layout, i, 4, backend)
+        assert mx.array_equal(mx.array(kb).view(mx.bfloat16)[..., :n, :], k).item()

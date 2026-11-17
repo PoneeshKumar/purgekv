@@ -125,3 +125,33 @@ def test_index_survives_restart(tmp_path, codec):
     for (k, _), r in zip(live(cache), restored):
         ok = mx.array_equal(k, r.keys).item() if codec != "q8" else mx.abs(k - r.keys).max().item() < 0.05
         assert ok
+
+
+def test_compact_merges_segments(tmp_path):
+    store = SegmentKVStore(str(tmp_path))
+    cache = [KVCache() for _ in range(LAYERS)]
+    for step in range(10):
+        grow(cache, 17 + step, 50 + step, mx.bfloat16)
+        store.save("c", cache)
+    assert store.compact("c") == 10
+    assert len(store.sessions["c"]["segs"]) == 1 and len(list(tmp_path.iterdir())) == 1
+    for (k, v), r in zip(live(cache), store.load("c")):
+        assert mx.array_equal(k, r.keys).item() and mx.array_equal(v, r.values).item()
+    grow(cache, 5, 99, mx.bfloat16)  # appending after compaction still works
+    store.save("c", cache)
+    assert store.load("c")[0].offset == cache[0].offset
+
+
+def test_compact_keeps_shared_prompt_shared(tmp_path):
+    store = SegmentKVStore(str(tmp_path))
+    prompt = grow([KVCache() for _ in range(LAYERS)], 400, 60)
+    store.save("doc", prompt)
+    store.fork("doc", "chat")
+    chat = _branch(prompt, 30, 61)
+    for step in range(4):
+        grow(chat, 10, 62 + step)
+        store.save("chat", chat)
+    assert store.compact("chat") == 4
+    assert store.sessions["chat"]["segs"][0] == store.sessions["doc"]["segs"][0]  # still shared
+    for (k, _), r in zip(live(chat), store.load("chat")):
+        assert mx.array_equal(k, r.keys).item()

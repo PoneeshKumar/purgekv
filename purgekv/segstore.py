@@ -120,6 +120,64 @@ class SegmentKVStore:
             if not self._referenced(p) and os.path.exists(p):
                 os.remove(p)
 
+    def compact(self, key):
+        """Merge a session's own segments into one file (call while the chat is idle).
+
+        Saving after every turn leaves many small segments, and resume reads each one
+        per layer: 64 segments loaded ~6x slower than 1 on an M4. Segments shared with
+        other sessions (a forked prompt) are left alone so they stay shared.
+        Returns the number of segments merged."""
+        if self.codec != "raw":
+            raise NotImplementedError("compact() supports codec='raw'")
+        segs = self.sessions[key]["segs"]
+        first = 0
+        while first < len(segs) and self._referenced(segs[first][0], ignore=key):
+            first += 1  # leading shared prompt segments stay as they are
+        own = segs[first:]
+        if len(own) < 2:
+            return 0
+        n_tensors = len(own[0][1]["shapes"])
+        start = sum(m["shapes"][0][2] for _, m in segs[:first])
+        n = start + sum(m["shapes"][0][2] for _, m in own)
+        path = os.path.join(self.root, f"{key}_{start}_{n}.c.{self.codec}")
+        out = os.open(path + ".tmp", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+        fcntl.fcntl(out, F_NOCACHE, 1)
+        shapes, written = [], 0
+        try:
+            for t in range(n_tensors):  # one tensor in memory at a time
+                B, Hh, _, Dd = own[0][1]["shapes"][t]
+                T = sum(m["shapes"][t][2] for _, m in own)
+                buf = np.empty((B, Hh, T, Dd), np.uint16)
+                t0 = 0
+                for p, meta in own:
+                    off = sum(int(np.prod(s)) * 2 for s in meta["shapes"][:t])
+                    ln = meta["shapes"][t][2]
+                    fd = os.open(p, os.O_RDONLY)
+                    try:
+                        fcntl.fcntl(fd, F_NOCACHE, 1)
+                        views = [memoryview(buf[0, h, t0:t0 + ln, :]).cast("B") for h in range(Hh)]
+                        if os.preadv(fd, views, off) != sum(v.nbytes for v in views):
+                            raise OSError(f"short read compacting {p}")
+                    finally:
+                        os.close(fd)
+                    t0 += ln
+                mv = memoryview(buf.reshape(-1).view(np.uint8))
+                while mv:
+                    k = os.write(out, mv)
+                    written += k
+                    mv = mv[k:]
+                shapes.append(buf.shape)
+        finally:
+            os.close(out)
+        os.replace(path + ".tmp", path)  # never leave a half-written segment behind
+        meta = {"shapes": shapes, "dtype": own[0][1]["dtype"], "nbytes": written}
+        self.sessions[key]["segs"] = segs[:first] + [(path, meta)]
+        for p, _ in own:
+            if not self._referenced(p) and os.path.exists(p):
+                os.remove(p)
+        self.bytes_written += written
+        return len(own)
+
     # ---- survive a restart -----------------------------------------------------
     def save_index(self):
         """Write the session index to <root>/index.json (atomically)."""
