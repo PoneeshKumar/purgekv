@@ -2,13 +2,15 @@
   * append-only segments: each save writes only the tokens added since the last save
   * codec per segment: "raw", "lz" (lossless split-plane LZFSE) or "q8" (8-bit affine, lossy)
   * page-cache bypass (F_NOCACHE) on write and read so measured resumes are true SSD reads
+  * mlx-lm QuantizedKVCache (e.g. mlx_lm.server --kv-bits 8) stored as is with codec="raw":
+    ~half the bytes of bf16 on disk and on every reload, nothing dequantized
 """
 import fcntl, json, os
 from concurrent.futures import ThreadPoolExecutor
 import ctypes
 import numpy as np
 import mlx.core as mx
-from mlx_lm.models.cache import KVCache
+from mlx_lm.models.cache import KVCache, QuantizedKVCache
 
 F_NOCACHE = 48
 _lc = ctypes.CDLL("/usr/lib/libcompression.dylib")
@@ -82,6 +84,8 @@ def _meta_to_json(meta):
     m["dtype"] = str(meta["dtype"]).split(".")[-1]
     if "qdtypes" in m:
         m["qdtypes"] = [[str(d).split(".")[-1] for d in t] for t in meta["qdtypes"]]
+    if "dtypes" in m:
+        m["dtypes"] = [str(d).split(".")[-1] for d in meta["dtypes"]]
     return m
 
 
@@ -92,7 +96,13 @@ def _meta_from_json(m):
     if "qdtypes" in m:
         m["qdtypes"] = [[getattr(mx, d) for d in t] for t in m["qdtypes"]]
         m["qshapes"] = [[tuple(s) for s in t] for t in m["qshapes"]]
+    if "dtypes" in m:
+        m["dtypes"] = [getattr(mx, d) for d in m["dtypes"]]
     return m
+
+
+def is_quantized(meta):
+    return "quant" in meta
 
 
 class SegmentKVStore:
@@ -130,6 +140,8 @@ class SegmentKVStore:
         if self.codec != "raw":
             raise NotImplementedError("compact() supports codec='raw'")
         segs = self.sessions[key]["segs"]
+        if any(is_quantized(m) for _, m in segs):
+            raise NotImplementedError("compact() does not support quantized caches yet")
         first = 0
         while first < len(segs) and self._referenced(segs[first][0], ignore=key):
             first += 1  # leading shared prompt segments stay as they are
@@ -182,7 +194,7 @@ class SegmentKVStore:
     def save_index(self):
         """Write the session index to <root>/index.json (atomically)."""
         data = {"codec": self.codec, "append": self.append, "sessions": {
-            k: {"saved": s["saved"],
+            k: {"saved": s["saved"], "info": s.get("info", {}),
                 "segs": [(os.path.relpath(p, self.root), _meta_to_json(m)) for p, m in s["segs"]]}
             for k, s in self.sessions.items()}}
         tmp = os.path.join(self.root, INDEX + ".tmp")
@@ -196,7 +208,7 @@ class SegmentKVStore:
         with open(os.path.join(root, INDEX)) as f:
             data = json.load(f)
         store = cls(root, data["codec"], data["append"])
-        store.sessions = {k: {"saved": s["saved"],
+        store.sessions = {k: {"saved": s["saved"], "info": s.get("info", {}),
                               "segs": [(os.path.join(root, p), _meta_from_json(m)) for p, m in s["segs"]]}
                           for k, s in data["sessions"].items()}
         return store
@@ -213,13 +225,28 @@ class SegmentKVStore:
                     os.remove(p)
         if n <= start:
             return 0
+        quant = isinstance(cache[0], QuantizedKVCache)
+        if quant != all(isinstance(c, QuantizedKVCache) for c in cache):
+            raise TypeError("mixed QuantizedKVCache and KVCache layers")
+        if quant and self.codec != "raw":
+            raise NotImplementedError("a QuantizedKVCache is stored with codec='raw' (it is already 8-bit)")
         layers = []
         for c in cache:
-            layers += [c.keys[..., start:n, :], c.values[..., start:n, :]]
+            if quant:  # (weights, scales, biases) for keys, then for values
+                layers += [x[..., start:n, :] for x in (*c.keys, *c.values)]
+            else:
+                layers += [c.keys[..., start:n, :], c.values[..., start:n, :]]
         mx.eval(layers)
         path = os.path.join(self.root, f"{key}_{start}_{n}.{self.codec}")
         meta = {"shapes": [a.shape for a in layers], "dtype": layers[0].dtype}
-        if self.codec == "q8":
+        if quant:
+            meta["quant"] = {"group_size": cache[0].group_size, "bits": cache[0].bits}
+            meta["dtypes"] = [a.dtype for a in layers]
+            meta["dtype"] = layers[1].dtype  # the scales' dtype: the model's activation dtype
+            raw = np.concatenate([np.asarray(a.view(mx.uint8)).reshape(-1) for a in layers])
+            meta["nbytes"] = raw.size
+            written = _write(path, [raw])
+        elif self.codec == "q8":
             q = [mx.quantize(a, group_size=64, bits=8) for a in layers]
             mx.eval(q)
             # numpy has no bfloat16: move bf16 scales/biases through a uint16 view
@@ -243,11 +270,22 @@ class SegmentKVStore:
         self.bytes_written += written
         return written
 
-    def load(self, key):
-        segs = self.sessions[key]["segs"]
+    def read_raw(self, key, segs=None):
+        """Read a session's segment files into memory. File I/O only (no MLX), so it is
+        safe on a background thread, e.g. to prefetch while the user or a tool is busy.
+        Pass the result to load(key, raw=...)."""
+        segs = list(self.sessions[key]["segs"]) if segs is None else segs
+        return [(path, meta, _read(path)) for path, meta in segs]
+
+    def load(self, key, raw=None):
+        parts = self.read_raw(key) if raw is None else raw
         per_layer = None
-        for path, meta in segs:
-            buf = _read(path)
+        quant = None
+        for path, meta, buf in parts:
+            if quant is None:
+                quant = meta.get("quant", False)
+            elif quant != meta.get("quant", False):
+                raise ValueError(f"session {key!r} mixes quantized and full-precision segments")
             if self.codec == "q8":
                 arrs, off = [], 0
                 for sz in meta["sizes"]:
@@ -259,20 +297,29 @@ class SegmentKVStore:
                     i += 3
             else:
                 if self.codec == "lz":
-                    parts, off = [], 0
+                    lparts, off = [], 0
                     for bsz, sz in meta["parts"]:
-                        parts.append((buf[off:off + bsz], sz)); off += bsz
-                    raw = lz_unpack(parts, meta["nbytes"])
+                        lparts.append((buf[off:off + bsz], sz)); off += bsz
+                    data = lz_unpack(lparts, meta["nbytes"])
                 else:
-                    raw = buf
-                whole = mx.array(raw)
+                    data = buf
+                whole = mx.array(data)
+                dtypes = meta.get("dtypes") or [meta["dtype"]] * len(meta["shapes"])
                 tensors, off = [], 0
-                for shp in meta["shapes"]:
-                    nb = int(np.prod(shp)) * 2
-                    tensors.append(whole[off:off + nb].view(meta["dtype"]).reshape(shp)); off += nb
+                for shp, dt in zip(meta["shapes"], dtypes):
+                    nb = int(np.prod(shp)) * dt.size
+                    tensors.append(whole[off:off + nb].view(dt).reshape(shp)); off += nb
             per_layer = [[t] for t in tensors] if per_layer is None else [p + [t] for p, t in zip(per_layer, tensors)]
         per_layer = [p[0] if len(p) == 1 else mx.concatenate(p, axis=2) for p in per_layer]
         cache = []
+        if quant:
+            for i in range(0, len(per_layer), 6):
+                c = QuantizedKVCache(group_size=quant["group_size"], bits=quant["bits"])
+                c.keys, c.values = tuple(per_layer[i:i + 3]), tuple(per_layer[i + 3:i + 6])
+                c.offset = per_layer[i].shape[2]
+                cache.append(c)
+            mx.eval([x for c in cache for x in (*c.keys, *c.values)])
+            return cache
         for i in range(0, len(per_layer), 2):
             c = KVCache()
             c.keys, c.values, c.offset = per_layer[i], per_layer[i + 1], per_layer[i].shape[2]

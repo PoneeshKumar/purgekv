@@ -25,6 +25,9 @@ def _layout(store, key):
     """Per segment: path and, per tensor (k0, v0, k1, v1, ...), the byte ranges to read."""
     out = []
     for path, meta in store.sessions[key]["segs"]:
+        if "quant" in meta:
+            raise NotImplementedError("streaming a quantized (--kv-bits) cache is not supported yet; "
+                                      "use store.load()")
         ranges, off = [], 0
         if store.codec == "q8":
             sizes = iter(meta["sizes"])
