@@ -1,0 +1,131 @@
+"""SSD tier for mlx_lm.server's prompt cache, on synthetic caches (no model download)."""
+import mlx.core as mx
+import pytest
+from mlx_lm.models.cache import KVCache, QuantizedKVCache
+
+from purgekv.segstore import SegmentKVStore
+from purgekv.server import SSDPromptCache
+
+from test_segstore import LAYERS, HEADS, DIM, grow, live
+
+M = "test-model"
+GB = 1 << 30
+
+
+def chat(n, seed, quant=False):
+    cache = grow([KVCache() for _ in range(LAYERS)], n, seed, mx.bfloat16)
+    if quant:
+        cache = [c.to_quantized(group_size=64, bits=8) for c in cache]
+    return cache
+
+
+def same(a, b):
+    if isinstance(a[0], QuantizedKVCache):
+        return all(mx.array_equal(x[..., :ca.offset, :], y[..., :cb.offset, :]).item()
+                   for ca, cb in zip(a, b) for x, y in zip((*ca.keys, *ca.values), (*cb.keys, *cb.values)))
+    return all(mx.array_equal(k, k2).item() and mx.array_equal(v, v2).item() for (k, v), (k2, v2) in zip(live(a), live(b)))
+
+
+def test_quantized_cache_round_trip_is_exact_and_half_size(tmp_path):
+    full, q = chat(512, 1), chat(512, 1, quant=True)
+    s = SegmentKVStore(str(tmp_path / "q"))
+    s.save("c", q[:])
+    k = mx.random.normal((1, HEADS, 40, DIM), key=mx.random.key(9)).astype(mx.bfloat16)
+    for c in q:
+        c.update_and_fetch(k, k)  # an appended turn
+    s.save("c", q)
+    r = s.load("c")
+    assert isinstance(r[0], QuantizedKVCache) and r[0].offset == 552 and same(q, r)
+    f = SegmentKVStore(str(tmp_path / "f"))
+    f.save("c", full)
+    qb = sum(m["nbytes"] for _, m in s.sessions["c"]["segs"]) * 512 / 552
+    fb = sum(m["nbytes"] for _, m in f.sessions["c"]["segs"])
+    assert 0.5 < qb / fb < 0.56  # 8 bits + a scale and bias per 64 values
+
+
+def test_quantized_index_survives_restart(tmp_path):
+    q = chat(300, 2, quant=True)
+    s = SegmentKVStore(str(tmp_path))
+    s.save("c", q)
+    s.save_index()
+    r = SegmentKVStore.open(str(tmp_path)).load("c")
+    assert same(q, r)
+
+
+def test_streaming_and_compaction_refuse_quantized(tmp_path):
+    from purgekv.stream import _layout
+    s = SegmentKVStore(str(tmp_path))
+    q = chat(64, 3, quant=True)
+    s.save("c", q)
+    with pytest.raises(NotImplementedError):
+        _layout(s, "c")
+    s.save("c", q)
+    with pytest.raises(NotImplementedError):
+        s.compact("c")
+
+
+def toks(n, base=0):
+    return list(range(base, base + n))
+
+
+@pytest.mark.parametrize("quant", [False, True])
+def test_evicted_chat_comes_back_from_ssd(tmp_path, quant):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a, b = chat(300, 4, quant), chat(200, 5, quant)
+    pc.insert_cache(M, toks(301), a)  # cache_key holds one more token than the cache
+    pc.insert_cache(M, toks(201, 10_000), b)  # max_size=1: evicts chat a from RAM
+    cache, rest = pc.fetch_nearest_cache(M, toks(301) + [7, 8])
+    assert rest == [300, 7, 8] and pc.stats["ssd_loads"] == 1 and same(a, cache)
+    cache, rest = pc.fetch_nearest_cache(M, toks(201, 10_000) + [1])
+    assert pc.stats["ram_hits"] == 1 and rest == [1] and pc.stats["ssd_loads"] == 1  # RAM hit
+
+
+def test_next_turn_writes_only_new_tokens(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(300, 6)
+    pc.insert_cache(M, toks(300), a)
+    first = pc.stats["bytes_written"]
+    grow(a, 20, 7, mx.bfloat16)
+    pc.insert_cache(M, toks(320), a)
+    assert pc.stats["bytes_written"] - first == pytest.approx(first * 20 / 300, rel=0.01)
+    st = pc.stores[M]
+    assert len(st.sessions) == 1  # the 300-token prefix entry was folded into the new one
+    r = st.load(next(iter(st.sessions)))
+    assert same(a, r)
+
+
+def test_prefetch_reads_waiting_chat_before_it_returns(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=GB)
+    a, b = chat(300, 8), chat(200, 9)
+    pc.insert_cache(M, toks(300), a)
+    pc.insert_cache(M, toks(200, 10_000), b)  # a leaves RAM -> prefetch starts
+    assert list(pc.prefetched) and next(iter(pc.prefetched))[0] == M
+    next(iter(pc.prefetched.values()))[0].result()
+    cache, rest = pc.fetch_nearest_cache(M, toks(300) + [5])
+    assert pc.stats["prefetch_hits"] == 1 and same(a, cache) and rest == [5]
+
+
+def test_prefetch_respects_budget(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=1)
+    pc.insert_cache(M, toks(300), chat(300, 10))
+    pc.insert_cache(M, toks(200, 10_000), chat(200, 11))
+    assert not pc.prefetched
+
+
+def test_server_restart_reloads_from_ssd(tmp_path):
+    a = chat(300, 12)
+    SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0).insert_cache(M, toks(300), a)
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)  # a new process
+    cache, rest = pc.fetch_nearest_cache(M, toks(300) + [1, 2])
+    assert rest == [1, 2] and same(a, cache)
+
+
+def test_unsupported_cache_types_stay_ram_only(tmp_path):
+    from mlx_lm.models.cache import RotatingKVCache
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    c = [RotatingKVCache(max_size=64) for _ in range(LAYERS)]
+    k = mx.zeros((1, HEADS, 10, DIM))
+    for x in c:
+        x.update_and_fetch(k, k)
+    pc.insert_cache(M, toks(10), c)
+    assert pc.stats["saves"] == 0

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "purgekv"
-version = "0.2.0"
+version = "0.3.0"
 description = "Layer-streamed KV-cache resume and an append-only SSD KV tier for MLX on Apple Silicon"
 readme = "README.md"
 license = "MIT"
@@ -20,6 +20,9 @@ classifiers = [
 [project.optional-dependencies]
 dev = ["pytest", "ruff"]
 video = ["pillow", "imageio-ffmpeg"]
+
+[project.scripts]
+purgekv-server = "purgekv.server:main"
 
 [project.urls]
 Homepage = "https://github.com/PoneeshKumar/purgekv"
