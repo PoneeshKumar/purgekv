@@ -33,6 +33,33 @@ Llama 3.2 1B at **64K tokens**: 1.06 s → 0.80 s streamed → **0.19 s prefetch
 205 s to recompute. Output was identical to a never-saved cache in every run.
 Details, 256-token messages and memory: [docs/RESEARCH.md](docs/RESEARCH.md#i-large-chats-8k64k-tokens-measured-researchbench_scalepy).
 
+### New in 0.3: a server for agents
+
+`purgekv-server` is `mlx_lm.server` with an SSD tier under its prompt cache. Same flags,
+same OpenAI API, so chat apps and coding agents use it unchanged:
+
+```bash
+purgekv-server --model mlx-community/Llama-3.2-3B-Instruct-4bit --prompt-cache-bytes 2GB --kv-bits 8
+```
+
+Four agents sharing one server on a 16 GB M4 (8K-token contexts, RAM for about one):
+
+| Time to first token | Stock mlx_lm.server | **purgekv-server** | **+ `--kv-bits 8`** |
+|---|---|---|---|
+| Typical agent turn | 29.3 s (recomputes the chat) | **1.33 s** | **1.13 s (26×)** |
+| Worst turn | 33.4 s | 2.51 s | **1.19 s** |
+| After a server restart | 45.6 s | 1.85 s | **1.35 s** |
+
+- After every reply, the chat is appended to SSD (only new tokens). A chat pushed out
+  of RAM, or lost to a restart, is read back instead of recomputed.
+- **Think-time prefetch:** while an agent runs a tool, its chat is read back from SSD in
+  the background, so its next turn does not wait for the disk.
+- `--kv-bits 8` (an mlx-lm flag) caches are stored 8-bit: half the bytes on disk and on
+  every reload. Replies can differ slightly from full precision (mlx-lm's trade-off).
+- Replies match stock mlx-lm with enough RAM to keep every chat: 20 of 20 turns.
+
+Details: [docs/RESEARCH.md](docs/RESEARCH.md#k-a-server-for-agents-ssd-tier-prefetch-8-bit-kv-purgekvserverpy-researchbench_serverpy).
+
 ## Try it on your Mac
 
 ```bash
@@ -126,6 +153,8 @@ The full log, with every experiment, negative result and raw data, is in
 ## Limits
 
 Tested on one M4 MacBook (16 GB) with the standard KV cache; Llama 3.x and Qwen3 only.
+purgekv-server keeps other cache layouts (sliding window, hybrid, draft models) in RAM only,
+and does not yet cap its disk use: delete `--kv-dir` (default `~/.cache/purgekv/server`) to clear it.
 
 ## License
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 — 2026-11-19
+
+A server for agents. Measured with 4 agents sharing one server on an M4 MacBook (16 GB).
+
+### Added
+- **`purgekv-server`**: `mlx_lm.server` with an SSD tier under its prompt cache. Every
+  mlx_lm.server flag and the OpenAI API work unchanged. Chats pushed out of the RAM budget
+  or lost to a restart are read back from SSD instead of recomputed: 29.3 s → 1.33 s per
+  agent turn (3B, 8K-token contexts), 45.6 s → 1.85 s after a restart.
+- **Think-time prefetch**: chats waiting on their user or a tool are read back from SSD in
+  the background when they leave RAM, oldest-waiting first, up to `--prefetch-gb`.
+- **8-bit KV on SSD**: mlx-lm `QuantizedKVCache` (`--kv-bits 8`) is stored as is, about
+  half the bytes. With prefetch: 1.13 s per agent turn, worst 1.19 s, 1.35 s after a restart.
+- `SegmentKVStore.read_raw()`: file I/O only, so reads can run on a background thread.
+- `research/bench_server.py` (agents over real HTTP) and `examples/trading_agents.py`
+  (five agents design, code, check, backtest and paper-trade a strategy; paper only).
+
+
 ## 0.2.0 — 2026-11-16
 
 Large chats, measured on an M4 MacBook (16 GB) up to 64K tokens.

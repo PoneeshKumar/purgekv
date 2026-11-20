@@ -203,6 +203,43 @@ Synthetic 2 GB cache shaped like Llama 3.2 3B, cold reads, median of 3.
 | save() doubles memory and stalls | +14% time vs a raw write; +0.14 GB process memory | Minor. Not worth fixing now. |
 | MLX keeps freed memory after a resume | 0.0 GB held | **Not a problem.** |
 
+### K. A server for agents: SSD tier, prefetch, 8-bit KV (`purgekv/server.py`, `research/bench_server.py`)
+Four coding agents share one server (Llama 3.2 3B, 4-bit). Each has its own ~8K-token
+context (a different slice of the Python standard library as its "repository"). A turn
+sends the agent's history plus a ~150-token tool result over real HTTP, streams a
+24-token greedy reply, then the agent "runs a tool" for 1.5 s while the next agent goes.
+RAM budget for cached chats: 1.2 GB (`--prompt-cache-bytes`), about one agent's chat.
+3 measured rounds × 4 agents, then a server restart and one more turn each.
+
+| Time to first token | stock mlx_lm.server | 1: SSD tier | **1+2: + prefetch** | **1+2+3: + 8-bit KV** |
+|---|---|---|---|---|
+| median | 29.3 s | 1.41 s | **1.33 s** | **1.13 s** |
+| 90th percentile | 30.3 s | 1.53 s | 1.44 s | **1.15 s** |
+| worst turn | 33.4 s | 2.78 s | 2.51 s | **1.19 s** |
+| first turn after a restart (median) | 45.6 s | 2.19 s | 1.85 s | **1.35 s** |
+| chat read from SSD (server log, median) | — | 0.40 s | 0.15 s | **0.06 s** |
+| disk used | — | 3.6 GB | 3.6 GB | **1.9 GB** |
+
+- **Stock recomputes.** A chat pushed out of the RAM budget is prefilled again from
+  scratch: 22–26× slower than reading it back.
+- **Prefetch (2) hit every time.** All 12 steady-state reloads in 1+2 and 1+2+3 found
+  the chat already read while other agents worked. It cut the SSD read from 0.40 s to
+  0.15 s, but end-to-end time only from 1.41 s to 1.33 s: most of the remaining ~1.1 s
+  is the model reading the new tool result, not the disk.
+- **8-bit KV (3)** halves every byte moved (save, disk, prefetch) and gave the steadiest
+  times (worst turn 1.19 s vs 2.51 s). For reference, stock mlx-lm with `--kv-bits 8`
+  kept every chat in RAM (it does not apply `--prompt-cache-bytes` when `--kv-bits` is
+  set) and answered in 0.98 s, so 1+2+3 is within 0.15 s of "everything in RAM" while
+  using 1.2 GB of RAM for chats.
+- **Restart.** Stock mlx-lm starts empty and recomputes every agent (45.6 s, 31.9 s with
+  8-bit); purgekv-server reopens the chats from SSD (1.35–2.19 s).
+- **Same replies?** 8-bit purgekv vs stock 8-bit: 20/20 identical. Full precision vs
+  stock (recompute): 17/20. The control settles where the 3 come from: stock mlx-lm with
+  enough RAM to keep every chat (`stock_ram`, its own prompt cache, no purgekv) gave the
+  **same replies as purgekv-server in 20/20 turns**, and differs from a full recompute in
+  the same 3. Reusing a cached history instead of recomputing it can change a word in
+  bf16; purgekv reads back exactly the cache mlx-lm would have kept in RAM.
+
 ## Conclusions
 1. **For a local LLM server on a Mac: write idle KV caches to SSD and drop them from RAM.**
    This removed the swap storm completely and resumed fastest. It's simple, and it's
@@ -234,6 +271,7 @@ research/test_cache_types.py    C      research/test_purgeable.py   D           
 research/bench_compress.py      E      research/bench_combined.py   F             research/estimate_studio.py  G
 purgekv/stream.py      layer-streamed resume     research/bench_stream.py     H
 purgekv/segstore.py    append-only SSD tier with raw / lossless / 8-bit codecs
+purgekv/server.py      purgekv-server (mlx_lm.server + SSD tier + prefetch)   research/bench_server.py  K
 research/bench_pressure.py      first pressure version (Low Power Mode runs, superseded by v2)
 research/run_all.sh    reproduce everything      launch/make_video.py, make_video2.py  render the launch videos (v2: `--no-voice`)
 ```

@@ -11,3 +11,6 @@ launch/purgekv_launch_music.mp4
 
 *.egg-info/
 build/
+results/*.log
+results/*_run.txt
+results/trading_smoke/
