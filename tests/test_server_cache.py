@@ -129,3 +129,19 @@ def test_unsupported_cache_types_stay_ram_only(tmp_path):
         x.update_and_fetch(k, k)
     pc.insert_cache(M, toks(10), c)
     assert pc.stats["saves"] == 0
+
+
+def test_rewritten_history_reuses_the_shared_start(tmp_path):
+    """Qwen3's template drops the empty <think></think> from past replies, so the saved
+    chat (prompt + generated reply) is not a prefix of the next request. The SSD tier must
+    reuse the shared start and trim the rest, as mlx-lm's RAM cache does."""
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(300, 13)
+    saved = toks(250) + [9_001, 9_002] + toks(48, 5_000)   # prompt, think tags, reply
+    pc.insert_cache(M, saved, a)
+    pc.insert_cache(M, toks(200, 10_000), chat(200, 14))  # push it out of RAM
+    nxt = toks(250) + toks(48, 5_000) + [7, 7, 7]            # history without the think tags
+    cache, rest = pc.fetch_nearest_cache(M, nxt)
+    assert pc.stats["ssd_loads"] == 1 and cache[0].offset == 250 and rest == nxt[250:]
+    k, v = live(a)[0]
+    assert mx.array_equal(cache[0].keys[..., :250, :], k[..., :250, :]).item()

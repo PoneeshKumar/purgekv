@@ -68,17 +68,31 @@ class SSDPromptCache(LRUPromptCache):
             self.stores[model] = st
         return self.stores[model]
 
-    def _disk_match(self, model, tokens, limit):
-        """Longest saved session whose tokens are a prefix of `tokens`, at most `limit` long."""
+    def _disk_match(self, model, tokens, limit, partial=False):
+        """Saved session sharing the longest start with `tokens` (at most `limit` tokens).
+
+        partial=False: the session must be a whole prefix of `tokens` (to fork from it).
+        partial=True: it may run longer and be trimmed back, like mlx-lm's RAM cache does.
+        Chat templates often rewrite earlier turns (Qwen3 drops the empty <think></think>
+        block from past replies), so the saved chat is rarely an exact prefix of the next
+        request. Returns (session, number of tokens to reuse)."""
         self._store(model)
         best, best_n = None, 0
-        t = np.asarray(tokens[:limit], np.int64) if limit > 0 else None
-        if t is None:
+        if limit <= 0:
             return None, 0
+        t = np.asarray(tokens[:limit], np.int64)
         for (m, k), tok in self.tokens.items():
-            n = len(tok)
-            if m == model and best_n < n <= len(t) and np.array_equal(t[:n], tok):
-                best, best_n = k, n
+            if m != model:
+                continue
+            n = min(len(tok), len(t))
+            if not partial and len(tok) > len(t):
+                continue
+            eq = t[:n] == tok[:n]
+            common = n if eq.all() else int(np.argmin(eq))
+            if not partial and common < len(tok):
+                continue
+            if common > best_n:
+                best, best_n = k, common
         return best, best_n
 
     def _in_ram(self, model, tok):
@@ -90,7 +104,7 @@ class SSDPromptCache(LRUPromptCache):
         cache, rest = super().fetch_nearest_cache(model, tokens)
         ram_n = len(tokens) - len(rest)
         try:
-            key, n = self._disk_match(model, tokens, len(tokens) - 1)  # leave >= 1 token to run
+            key, n = self._disk_match(model, tokens, len(tokens) - 1, partial=True)  # leave >= 1 token
         except Exception:
             log.exception("purgekv: SSD lookup failed")
             key, n = None, 0
@@ -103,6 +117,10 @@ class SSDPromptCache(LRUPromptCache):
             return cache, rest
         try:
             loaded = self._load(model, key)
+            extra = loaded[0].offset - n
+            if extra > 0:  # the saved chat runs past the shared start: drop the tail
+                for c in loaded:
+                    c.trim(extra)
         except Exception:
             log.exception("purgekv: SSD load failed; recomputing instead")
             self._schedule()
