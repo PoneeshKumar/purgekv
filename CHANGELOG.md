@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Fixed
+- **purgekv-server wrote Qwen3 chats again in full on every turn.** Qwen3's chat template
+  drops the empty `<think></think>` from past replies, so a saved chat was never an exact
+  prefix of the next one, and every save started from scratch; the old copies also stayed
+  on disk. Saves now keep the saved segments before the point where the chats diverge and
+  rewrite only the previous turn. In a 10-turn agent chat: 43 MB written → 12.8 MB (6.2 MB
+  is the minimum), and disk use 43 MB → 6.3 MB. A chat that branches off before its last
+  turn (an edited earlier message) still keeps the original.
+- `SegmentKVStore.fork(src, dst, upto=)` shares only the first whole segments;
+  `SegmentKVStore.save(key, cache, upto=)` saves up to a token.
+
 ### Changed
 - The package now holds only the product: `segstore`, `stream`, `fastread`, `server` and
   `common`. The purgeable-memory experiment (`purgekv.purgeable`, `purgekv.store`,

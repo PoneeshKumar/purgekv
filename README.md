@@ -173,9 +173,8 @@ The full log, with every experiment, negative result and raw data, is in
 Tested on one M4 MacBook (16 GB) with the standard KV cache; Llama 3.x and Qwen3 only.
 purgekv-server keeps other cache layouts (sliding window, hybrid, draft models) in RAM only,
 and does not yet cap its disk use: delete `--kv-dir` (default `~/.cache/purgekv/server`) to clear it.
-With Qwen3, whose chat template rewrites earlier replies, purgekv-server currently saves the
-whole chat on every turn instead of only the new tokens (about 4× the SSD writes in the
-trading demo) and keeps the older copies until you clear `--kv-dir`. A fix is planned for 0.4.
+With chat templates that rewrite earlier replies (Qwen3 drops the empty `<think></think>`),
+each save also rewrites the previous turn, so SSD writes are about 2× the minimum.
 
 ## License
 

@@ -162,25 +162,35 @@ class SSDPromptCache(LRUPromptCache):
             return
         toks = np.asarray(tokens[:n], np.int32)
         store = self._store(model)
-        src, m = self._disk_match(model, toks, n)
+        # The saved chat sharing the longest start with this one. Often it is not a whole
+        # prefix: chat templates rewrite earlier turns (Qwen3 drops the empty <think></think>
+        # from past replies), so the chats diverge inside the previous turn.
+        src, m = self._disk_match(model, toks, n, partial=True)
         quant = isinstance(cache[0], QuantizedKVCache)
         if src is not None and any(("quant" in meta) != quant for _, meta in store.sessions[src]["segs"]):
             src, m = None, 0  # mlx-lm switched to quantized mid-chat: start a fresh file set
-        if src is not None and m == n:
+        src_n = len(self.tokens[(model, src)]) if src is not None else 0
+        if src is not None and m == n == src_n:
             self.waiting.pop((model, src), None)
             self.waiting[(model, src)] = None
             return
         t = time.perf_counter()
         key = uuid.uuid4().hex[:16]
-        if src is not None:
-            store.fork(src, key)  # share the saved prefix; write only tokens m..n
-        written = store.save(key, cache)
+        shared = store.fork(src, key, upto=m) if src is not None else 0  # whole segments before the divergence
+        # Write tokens shared..n, split at m: the next turn diverges after m (inside this
+        # turn's reply), so it can keep the segment that ends at m.
+        written = store.save(key, cache, upto=m) if shared < m else 0
+        written += store.save(key, cache)
         tf = f"{key}.tok"
         toks.tofile(os.path.join(store.root, tf))
         store.sessions[key]["info"] = {"tokens": tf}
         self.tokens[(model, key)] = toks
-        if src is not None and m == len(self.tokens[(model, src)]):
-            self._forget(model, src)  # a strict prefix of the new chat: its files live on in `key`
+        last = store.sessions[src]["segs"][-1][1]["shapes"][0][2] if src is not None else 0
+        if src is not None and n >= src_n and m >= src_n - last:
+            # The new chat is at least as long and repeats all of src but (at most) its last
+            # saved segment, as rewritten by the template: src is superseded. Its shared files
+            # live on in `key`. A chat that branches off earlier (an edited message) keeps src.
+            self._forget(model, src)
         store.save_index()
         self.waiting[(model, key)] = None
         while len(self.waiting) > 256:

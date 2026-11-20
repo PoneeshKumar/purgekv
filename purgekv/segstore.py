@@ -113,12 +113,25 @@ class SegmentKVStore:
         self.bytes_written = 0
 
     # ---- shared cached prompts -------------------------------------------------
-    def fork(self, src, dst):
+    def fork(self, src, dst, upto=None):
         """Start session `dst` from cached session `src` (e.g. a long system prompt or
         document) without copying it: dst references src's segment files and later
-        saves to dst write only dst's own new tokens."""
+        saves to dst write only dst's own new tokens.
+
+        upto: share only src's first `upto` tokens, rounded down to a whole segment (for
+        a chat that diverges from src partway). Returns the number of tokens shared."""
         s = self.sessions[src]
-        self.sessions[dst] = {"saved": s["saved"], "segs": list(s["segs"])}
+        segs, saved = list(s["segs"]), s["saved"]
+        if upto is not None and upto < saved:
+            segs, saved = [], 0
+            for path, meta in s["segs"]:
+                n = meta["shapes"][0][2]  # (batch, heads, tokens, dim)
+                if saved + n > upto:
+                    break
+                segs.append((path, meta))
+                saved += n
+        self.sessions[dst] = {"saved": saved, "segs": segs}
+        return saved
 
     def _referenced(self, path, ignore=None):
         return any(path == p for k, s in self.sessions.items() if k != ignore for p, _ in s["segs"])
@@ -213,10 +226,10 @@ class SegmentKVStore:
                           for k, s in data["sessions"].items()}
         return store
 
-    def save(self, key, cache):
-        """Persist tokens not yet saved (or everything, if append=False)."""
+    def save(self, key, cache, upto=None):
+        """Persist tokens not yet saved (or everything, if append=False), up to `upto`."""
         s = self.sessions.setdefault(key, {"saved": 0, "segs": []})
-        n = cache[0].offset
+        n = cache[0].offset if upto is None else min(upto, cache[0].offset)
         start = s["saved"] if self.append else 0
         if not self.append:
             old, s["segs"] = s["segs"], []

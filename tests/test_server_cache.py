@@ -145,3 +145,69 @@ def test_rewritten_history_reuses_the_shared_start(tmp_path):
     assert pc.stats["ssd_loads"] == 1 and cache[0].offset == 250 and rest == nxt[250:]
     k, v = live(a)[0]
     assert mx.array_equal(cache[0].keys[..., :250, :], k[..., :250, :]).item()
+
+
+THINK = [9_001, 9_002]  # Qwen3's empty <think></think>: in the reply, dropped from history later
+
+
+def agent_chat(pc, turns, rewrite=True):
+    """An agent loop: each turn adds a tool result and a reply; another chat then pushes
+    this one out of RAM. Returns the last cache and its tokens."""
+    hist, nxt = toks(1000), 50_000
+    for turn in range(turns):
+        prompt = hist + toks(150, nxt)
+        reply = toks(50, nxt + 150)
+        nxt += 200
+        full = prompt + (THINK if rewrite else []) + reply
+        cache, _ = pc.fetch_nearest_cache(M, prompt + (THINK if rewrite else []))
+        if cache is None:
+            cache = [KVCache() for _ in range(LAYERS)]
+        grow(cache, len(full) - cache[0].offset, turn, mx.bfloat16)
+        pc.insert_cache(M, full, cache)
+        pc.insert_cache(M, toks(5, 900_000 + 10 * turn), chat(5, 99))  # another agent's turn
+        hist = prompt + reply
+    return cache, full
+
+
+def test_rewritten_history_writes_only_the_last_turn_again(tmp_path):
+    """Before 0.4 a Qwen3 chat was written again in full on every turn, and the old
+    copies stayed on disk. Now each save rewrites at most the previous turn."""
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    cache, full = agent_chat(pc, 10)
+    st = pc.stores[M]
+    per_token = 2 * LAYERS * HEADS * DIM * 2  # keys + values, bf16
+    others = 10 * 5 * per_token
+    # each turn rewrites the previous one once: about 2x the chat in all, was ~7x (and growing)
+    assert pc.stats["bytes_written"] - others < 2.5 * len(full) * per_token
+    ours = [k for k, s in st.sessions.items() if s["saved"] > 100]
+    assert len(ours) == 1  # the superseded copies were deleted
+    assert same(cache, st.load(ours[0]))
+
+
+def test_exact_history_still_writes_each_token_once(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    _, full = agent_chat(pc, 10, rewrite=False)
+    per_token = 2 * LAYERS * HEADS * DIM * 2
+    assert pc.stats["bytes_written"] == (len(full) + 10 * 5) * per_token
+
+
+def test_a_chat_branching_off_early_keeps_the_original(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(300, 20)
+    pc.insert_cache(M, toks(300), a)               # turn 1
+    grow(a, 300, 22, mx.bfloat16)
+    pc.insert_cache(M, toks(600), a)               # turn 2: forks turn 1
+    b = grow(chat(300, 20), 100, 23, mx.bfloat16)  # same first 300 tokens as a
+    pc.insert_cache(M, toks(300) + toks(100, 70_000), b)  # an edited second message
+    st = pc.stores[M]
+    assert sorted(s["saved"] for s in st.sessions.values()) == [400, 600]
+    k600 = next(k for k, s in st.sessions.items() if s["saved"] == 600)
+    assert same(a, st.load(k600))
+
+
+def test_a_shorter_chat_does_not_delete_a_longer_one(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(500, 21)
+    pc.insert_cache(M, toks(500), a)
+    pc.insert_cache(M, toks(480) + [1, 2, 3], chat(483, 21))  # regenerated last reply, shorter
+    assert 500 in {s["saved"] for s in pc.stores[M].sessions.values()}
