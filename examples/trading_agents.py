@@ -206,6 +206,34 @@ class Agent:
         return text
 
 
+def size_orders(last, px, account=100_000):
+    """The orders to actually record, computed in code like the backtest: gross exposure
+    = account, split by |position|. A small model's own arithmetic is not trusted."""
+    gross = sum(abs(p) for p in last.values()) or 1
+    out = []
+    for t, p in last.items():
+        shares = int(abs(p) / gross * account // px[t])
+        if shares:
+            out.append({"ticker": t, "side": "BUY" if p > 0 else "SELL SHORT", "shares": shares,
+                        "notional": round(shares * px[t], 2)})
+    return out
+
+
+def agent_overspent(text, px, account=100_000):
+    """Rough check of the executor's own orders: total notional it implies."""
+    total = 0.0
+    for t, price in px.items():
+        m = re.search(rf"{t}\D{{0,40}}?(\d[\d,]*)\s*shares", text)
+        if m:
+            total += int(m.group(1).replace(",", "")) * price
+    return round(total / account, 2)
+
+
+def says(text, word):
+    """Does the reply start with this verdict? Models often write it in bold: **PASS**."""
+    return text.strip().lstrip("*#_ ").upper().startswith(word)
+
+
 def code_of(text):
     m = re.findall(r"```(?:python)?\n(.*?)```", text, re.S)
     return m[-1] if m else text
@@ -270,7 +298,7 @@ def workflow(run):
         idea = A["researcher"].ask(f"Backtest feedback so far: {feedback}\nPropose the next strategy idea.", 250)
         code = code_of(A["engineer"].ask(f"Implement this idea:\n{idea}", 700))
         review = A["qa"].ask(f"Idea:\n{idea}\n\nCode:\n```python\n{code}\n```", 250)
-        if not review.strip().upper().startswith("APPROVE"):
+        if not says(review, "APPROVE"):
             code = code_of(A["engineer"].ask(f"QA review:\n{review}\nReturn the corrected code.", 700))
         bt = run_backtest(code)
         if "error" in bt:  # the harness crashed: one fix attempt, like a real team would
@@ -278,13 +306,18 @@ def workflow(run):
             bt = run_backtest(code)
         verdict = A["backtester"].ask(f"Strategy code:\n```python\n{code}\n```\nHarness output:\n{json.dumps(bt)}", 250)
         orders = None
-        if verdict.strip().upper().startswith("PASS") and "last_positions" in bt:
+        if says(verdict, "PASS") and "last_positions" in bt:
             last = dict(zip(TICKERS, bt["last_positions"]))
             px = dict(zip(TICKERS, CLOSE[-1].round(2).tolist()))
             orders = A["executor"].ask(f"Last positions: {json.dumps(last)}\nLast prices: {json.dumps(px)}", 300)
+            sized, used = size_orders(last, px), agent_overspent(orders, px)
+            if used > 1.05:
+                print(f"  risk check: the executor's orders add up to {used}x the paper account; "
+                      "recording the code-sized orders instead", flush=True)
             with open(os.path.join(args.out, "paper_orders.json"), "a") as f:
-                f.write(json.dumps({"server": run.kind, "round": rnd, "positions": last, "prices": px,
-                                    "orders_text": orders, "paper_only": True}) + "\n")
+                f.write(json.dumps({"server": run.kind, "round": rnd, "orders": sized, "positions": last,
+                                    "prices": px, "executor_text": orders, "executor_notional_x_account": used,
+                                    "paper_only": True}) + "\n")
         results.append({"round": rnd, "idea": idea, "code": code, "qa": review, "backtest": bt,
                         "verdict": verdict, "paper_orders": orders})
         feedback = f"round {rnd}: {json.dumps(bt)[:600]} verdict: {verdict[:300]}"
