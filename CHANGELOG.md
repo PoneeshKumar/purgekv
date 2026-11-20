@@ -16,6 +16,12 @@ A server for agents. Measured with 4 agents sharing one server on an M4 MacBook 
 - `SegmentKVStore.read_raw()`: file I/O only, so reads can run on a background thread.
 - `research/bench_server.py` (agents over real HTTP) and `examples/trading_agents.py`
   (five agents design, code, check, backtest and paper-trade a strategy; paper only).
+  On Qwen3-8B: average wait for the first token 15.7 s → 7.0 s.
+
+### Fixed
+- purgekv-server reused nothing from SSD when the chat template rewrites past turns
+  (Qwen3 drops empty `<think></think>` blocks). It now reuses the longest shared start
+  and trims the rest, like mlx-lm's RAM cache.
 
 
 ## 0.2.0 — 2026-11-16

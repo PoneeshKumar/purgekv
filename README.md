@@ -58,6 +58,11 @@ Four agents sharing one server on a 16 GB M4 (8K-token contexts, RAM for about o
   every reload. Replies can differ slightly from full precision (mlx-lm's trade-off).
 - Replies match stock mlx-lm with enough RAM to keep every chat: 20 of 20 turns.
 
+**A real multi-agent task.** Five agents (ideas, code, QA, backtest, paper execution)
+building a trading strategy on Qwen3-8B, 1 GB of RAM for their chats: average wait for
+the first token **15.7 s → 7.0 s**; agents whose chat had left RAM **21.8 s → 6.9 s**.
+Run it yourself: `python examples/trading_agents.py` (paper trading only).
+
 Details: [docs/RESEARCH.md](docs/RESEARCH.md#k-a-server-for-agents-ssd-tier-prefetch-8-bit-kv-purgekvserverpy-researchbench_serverpy).
 
 ## Try it on your Mac
@@ -126,7 +131,7 @@ to MLX on the Mac.
 
 | | Status |
 |---|---|
-| Llama 3.x, Qwen3 | Supported; tested for identical output |
+| Llama 3.x, Qwen3 | Supported; tested for identical output; Qwen3-8B tested with purgekv-server |
 | Gemma 3 (sliding window), Qwen3.5 (hybrid attention) | Refused with a clear error; not yet supported |
 
 `check_supported(model)` tells you before you start.

@@ -240,6 +240,38 @@ RAM budget for cached chats: 1.2 GB (`--prompt-cache-bytes`), about one agent's 
   the same 3. Reusing a cached history instead of recomputing it can change a word in
   bf16; purgekv reads back exactly the cache mlx-lm would have kept in RAM.
 
+### L. A real multi-agent task: five trading agents on Qwen3-8B (`examples/trading_agents.py`)
+The prompt: *make and backtest a trading strategy, with one agent for ideas, one that
+builds the pipeline, a QA agent, a backtester and an agent that executes the trade.*
+Five agents share one Qwen3-8B (4-bit) server with a 1 GB RAM budget for their chats, for
+4 rounds of idea → code → QA → (fix) → sandboxed backtest → verdict. Each agent keeps its
+own conversation, growing to ~5K tokens.
+
+| | stock mlx_lm.server | **purgekv-server** |
+|---|---|---|
+| Average wait for the first token, per agent turn | 15.7 s | **7.0 s (2.2×)** |
+| Turns whose chat had left RAM | recomputed: 21.8 s median (12 turns) | **read from SSD: 6.9 s median (11 turns, 10 prefetched)** |
+| Turns with > 2.5K tokens of context | 24.9 s | **7.4 s (3.4×)** |
+| Whole workflow, including writing code | 601 s | **434 s** |
+
+How it was measured, and what went wrong first:
+- **Fair order.** Each Mac run gets slower the longer the GPU works (turn 1, identical
+  work, is ~35% slower in whichever run goes second). Both columns are therefore a first
+  run on a cool machine: purgekv from `results/trading_agents/`, stock from
+  `results/trading_agents_run1/` (its stock run went first). Stock run second: 17.2 s average.
+- **Bug found and fixed.** The first run reused nothing from SSD: Qwen3's chat template
+  drops the empty `<think></think>` block from past replies, so a saved chat is never an
+  exact prefix of the next request. The SSD tier now reuses the longest shared start and
+  trims the rest, as mlx-lm's RAM cache does (`test_rewritten_history_reuses_the_shared_start`).
+- The workflows are not token-identical (replies differ slightly between runs, so the
+  agents write different code), so compare per-turn averages, not turn by turn.
+
+What the agents produced (synthetic prices, paper only): three rounds of code crashed in
+the sandboxed backtest; round 4, equal-weighted momentum, passed with out-of-sample Sharpe
+1.09 (train 0.58), max drawdown −22%, no look-ahead. The executor agent's own orders added
+up to **9.96× the $100,000 paper account**, so the demo now sizes orders in code and keeps
+the agent's text only as a note. Not investment advice.
+
 ## Conclusions
 1. **For a local LLM server on a Mac: write idle KV caches to SSD and drop them from RAM.**
    This removed the swap storm completely and resumed fastest. It's simple, and it's
