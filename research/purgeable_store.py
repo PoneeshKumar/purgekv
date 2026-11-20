@@ -14,7 +14,7 @@ import numpy as np
 import mlx.core as mx
 from mlx.utils import tree_flatten, tree_unflatten
 
-from .purgeable import PurgeableRegion, VOLATILE
+from purgeable import PurgeableRegion, VOLATILE
 
 # Group 7 is purged last. Group 0 (the default) can be purged almost
 # immediately on a Mac whose free-page pool is low, the normal state of macOS.

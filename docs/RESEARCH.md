@@ -294,17 +294,24 @@ oMLX, LM Studio or Ollama directly. The earlier Low Power Mode runs are in
 
 ## Files
 ```
-purgekv/purgeable.py   ctypes: mach_vm_allocate(VM_FLAGS_PURGABLE), mach_vm_purgable_control
-purgekv/store.py       PurgeableKVStore (any mlx-lm cache type), spill-to-SSD, thread-safe
+purgekv/segstore.py    append-only SSD tier with raw / lossless / 8-bit codecs
+purgekv/stream.py      layer-streamed resume (purgekv/fastread.py: uncached parallel reads)
+purgekv/server.py      purgekv-server (mlx_lm.server + SSD tier + prefetch)
 purgekv/common.py      prefill/greedy, real-text sessions, vm_stat/swap/footprint/pressure probes
-purgekv/hog.py         stand-in foreground app
+research/purgeable.py         ctypes: mach_vm_allocate(VM_FLAGS_PURGABLE), mach_vm_purgable_control
+research/purgeable_store.py   PurgeableKVStore (any mlx-lm cache type), spill-to-SSD, thread-safe
+research/hog.py               stand-in foreground app
 research/bench_latency.py       A      research/bench_pressure2.py  B (4 modes)   research/bench_pressure3.py  B (canary)
 research/test_cache_types.py    C      research/test_purgeable.py   D             results/  raw JSON
 research/bench_compress.py      E      research/bench_combined.py   F             research/estimate_studio.py  G
-purgekv/stream.py      layer-streamed resume     research/bench_stream.py     H
-purgekv/segstore.py    append-only SSD tier with raw / lossless / 8-bit codecs
-purgekv/server.py      purgekv-server (mlx_lm.server + SSD tier + prefetch)   research/bench_server.py  K
+research/bench_stream.py        H      research/bench_scale.py      I             research/probe_16gb.py       J
+research/bench_server.py        K      examples/trading_agents.py   L
 research/bench_pressure.py      first pressure version (Low Power Mode runs, superseded by v2)
-research/run_all.sh    reproduce everything      launch/make_video.py, make_video2.py  render the launch videos (v2: `--no-voice`)
+research/run_all.sh    reproduce everything
+```
+The purgeable-memory store (Exps A–D) lives in `research/`, not the package: it works,
+but the kernel deletes purgeable caches before it signals memory pressure (Exp D), so
+it is not something to build on. The launch videos and the scripts that render them
+are on the `launch` branch.
 ```
 Reproduce everything: `./research/run_all.sh` (Apple Silicon, Python ≥ 3.10). MIT licensed.

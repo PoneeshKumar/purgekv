@@ -4,7 +4,7 @@ import copy, json
 import mlx.core as mx
 from mlx_lm import load
 from purgekv.common import real_text_tokens, prefill, greedy
-from purgekv.store import PurgeableKVStore
+from purgeable_store import PurgeableKVStore
 
 CASES = [
     ("mlx-community/Llama-3.2-1B-Instruct-4bit", False),   # KVCache

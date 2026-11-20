@@ -12,7 +12,7 @@ import mlx.core as mx
 from mlx_lm import load
 from mlx_lm.models.cache import save_prompt_cache, load_prompt_cache
 from purgekv.common import fake_prompt, prefill, greedy, Timer
-from purgekv.store import PurgeableKVStore
+from purgeable_store import PurgeableKVStore
 
 model_id = sys.argv[1]
 Ns = [int(x) for x in sys.argv[2].split(",")]

@@ -13,7 +13,7 @@ from mlx_lm import load
 from mlx_lm.models.cache import save_prompt_cache, load_prompt_cache
 from purgekv.common import (real_text_tokens, prefill, greedy, vm_counters, swap_used_mb,
                             phys_footprint_mb, pressure_level, Timer)
-from purgekv.store import PurgeableKVStore
+from purgeable_store import PurgeableKVStore
 
 MODEL = "mlx-community/Llama-3.2-1B-Instruct-4bit"
 S, N, HOG = 12, 8192, 8
@@ -85,7 +85,7 @@ def snap(tag):
 
 
 snap("before_app")
-hog = subprocess.Popen([sys.executable, "-m", "purgekv.hog", str(HOG)], stdin=subprocess.PIPE,
+hog = subprocess.Popen([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "hog.py"), str(HOG)], stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE, text=True)
 log["app_alloc_s"] = json.loads(hog.stdout.readline())["alloc_s"]
 snap("after_app_alloc")

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- The package now holds only the product: `segstore`, `stream`, `fastread`, `server` and
+  `common`. The purgeable-memory experiment (`purgekv.purgeable`, `purgekv.store`,
+  `purgekv.hog`) moved to `research/` (`purgeable.py`, `purgeable_store.py`, `hog.py`).
+  Code that imported `purgekv.store.PurgeableKVStore` must use the research copy.
+- Launch videos and their render scripts moved to the `launch` branch; the
+  `video` extra is gone.
+- README starts with install and `purgekv-server`.
+
 ## 0.3.0 — 2026-11-19
 
 A server for agents. Measured with 4 agents sharing one server on an M4 MacBook (16 GB).

@@ -6,7 +6,7 @@
 """
 import os, time
 import numpy as np
-from purgekv import purgeable as P
+import purgeable as P
 from purgekv.common import phys_footprint_mb
 
 MB = 1 << 20
