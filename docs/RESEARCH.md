@@ -300,6 +300,12 @@ slightly, as in K). Disk after the run: 0.83 GB (Gemma), 1.6 GB (Qwen3.5, mostly
 prompt checkpoints). One machine, one run per config, on battery for both configs.
 Raw data: `results/server_gemma-3-1b-it-4bit.json`, `results/server_Qwen3.5-0.8B-4bit.json`.
 
+The 0.3.1 fix for Qwen3 (whose template rewrites past replies) checked on a real model,
+Qwen3-0.6B, same setup: disk after the run 3.64 GB, against 3.61 GB for every token of the
+four final chats stored once (before the fix, every save kept a full copy). Replies
+matched stock with RAM for every chat in 20 of 20 turns. Raw data:
+`results/server_Qwen3-0.6B-4bit.json`.
+
 ## Conclusions
 1. **For a local LLM server on a Mac: write idle KV caches to SSD and drop them from RAM.**
    This removed the swap storm completely and resumed fastest. It's simple, and it's

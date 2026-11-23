@@ -1,0 +1,415 @@
+{
+ "args": {
+  "model": "mlx-community/Qwen3-0.6B-4bit",
+  "agents": 4,
+  "ctx": 8192,
+  "rounds": 4,
+  "tool_s": 1.5,
+  "ram_gb": 0.5,
+  "prefetch_gb": 1.0,
+  "max_tokens": 24,
+  "configs": "v03_12,stock_ram",
+  "port": 8765,
+  "out": "results/server_Qwen3-0.6B-4bit.json",
+  "merge": false
+ },
+ "chip": "Apple M4",
+ "ram_gb": 16,
+ "configs": {
+  "v03_12": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 13.64,
+     "text": "# file: cmd.py\n```python\nclass Cmd:\n    \"\"\"A simple framework for writing line-oriented command interpreters",
+     "prompt_tokens": 6337,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 15.069,
+     "text": "class Chunk:",
+     "prompt_tokens": 6680,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 18.188,
+     "text": "None",
+     "prompt_tokens": 7007,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 18.994,
+     "text": "(opcode.py)",
+     "prompt_tokens": 7570,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 3.828,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 6584,
+     "cached_tokens": 6333,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 1.305,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 6906,
+     "cached_tokens": 6676,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.796,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7231,
+     "cached_tokens": 7003,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 1.452,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 7796,
+     "cached_tokens": 7566,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 1.359,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 6829,
+     "cached_tokens": 6580,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 0.801,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7144,
+     "cached_tokens": 6902,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 0.873,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7468,
+     "cached_tokens": 7227,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 1.897,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8031,
+     "cached_tokens": 7792,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 4.229,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 7074,
+     "cached_tokens": 6825,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 9.012,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7382,
+     "cached_tokens": 7140,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 1.972,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7705,
+     "cached_tokens": 7464,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 1.964,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8266,
+     "cached_tokens": 8027,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 2.44,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 7319,
+     "cached_tokens": 7070,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 3.153,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7620,
+     "cached_tokens": 7378,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 2.201,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7942,
+     "cached_tokens": 7701,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 2.199,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8501,
+     "cached_tokens": 8262,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {
+    "ram_hits": 0,
+    "ssd_loads": 4,
+    "prefetch_hits": 0,
+    "prefetch_partial": 0,
+    "saves": 12,
+    "bytes_written": 119046144,
+    "bytes_read": 3497295872,
+    "save_s": 1.0493945819325745,
+    "load_s": 3.574333001044579
+   },
+   "disk_gb": 3.636,
+   "build_ttft_median": 16.628,
+   "ttft_median": 1.675,
+   "ttft_p90": 3.828,
+   "ttft_max": 9.012,
+   "restart_ttft_median": 2.321
+  },
+  "stock_ram": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 20.464,
+     "text": "# file: cmd.py\n```python\nclass Cmd:\n    \"\"\"A simple framework for writing line-oriented command interpreters",
+     "prompt_tokens": 6337,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 26.409,
+     "text": "class Chunk:",
+     "prompt_tokens": 6680,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 26.375,
+     "text": "None",
+     "prompt_tokens": 7007,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 21.27,
+     "text": "(opcode.py)",
+     "prompt_tokens": 7570,
+     "cached_tokens": 25,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.718,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 6584,
+     "cached_tokens": 6333,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 1.042,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 6906,
+     "cached_tokens": 6676,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.525,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7231,
+     "cached_tokens": 7003,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 2.256,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 7796,
+     "cached_tokens": 7566,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 1.195,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 6829,
+     "cached_tokens": 6580,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 2.308,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7144,
+     "cached_tokens": 6902,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 4.034,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7468,
+     "cached_tokens": 7227,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 1.398,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8031,
+     "cached_tokens": 7792,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 1.61,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 7074,
+     "cached_tokens": 6825,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 37.166,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7382,
+     "cached_tokens": 7140,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 1.108,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7705,
+     "cached_tokens": 7464,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 1.233,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8266,
+     "cached_tokens": 8027,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 30.086,
+     "text": "Next, implement the `findmatch` method in the `Cmd` class to handle command matching and execution.",
+     "prompt_tokens": 7319,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 29.72,
+     "text": "Next, implement the `read` method in the `Chunk` class.",
+     "prompt_tokens": 7620,
+     "cached_tokens": 25,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 28.263,
+     "text": "Next, implement the translation logic and add it to the codebase.",
+     "prompt_tokens": 7942,
+     "cached_tokens": 25,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 27.566,
+     "text": "Next, implement the missing functionality in the opcode.py file.",
+     "prompt_tokens": 8501,
+     "cached_tokens": 25,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 23.822,
+   "ttft_median": 1.316,
+   "ttft_p90": 2.308,
+   "ttft_max": 37.166,
+   "restart_ttft_median": 28.992
+  }
+ },
+ "identical_replies": {
+  "v03_12_vs_stock_ram": "20/20"
+ }
+}

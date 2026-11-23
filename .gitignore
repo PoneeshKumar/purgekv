@@ -15,3 +15,6 @@ results/*_run.txt
 results/trading_smoke/
 results/**/*.log
 results/**/*.npz
+
+# private notes for the mlx-lm issue
+MLX_ISSUE_PREP.md
