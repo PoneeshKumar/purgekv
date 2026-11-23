@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "purgekv"
-version = "0.3.0"
+version = "0.3.1"
 description = "Layer-streamed KV-cache resume and an append-only SSD KV tier for MLX on Apple Silicon"
 readme = "README.md"
 license = "MIT"

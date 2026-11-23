@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — 2026-11-22
 
 ### Fixed
 - **purgekv-server wrote Qwen3 chats again in full on every turn.** Qwen3's chat template
