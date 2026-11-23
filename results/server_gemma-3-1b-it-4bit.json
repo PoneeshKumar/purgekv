@@ -1,0 +1,607 @@
+{
+ "args": {
+  "model": "mlx-community/gemma-3-1b-it-4bit",
+  "agents": 4,
+  "ctx": 8192,
+  "rounds": 4,
+  "tool_s": 1.5,
+  "ram_gb": 0.06,
+  "prefetch_gb": 0.5,
+  "max_tokens": 24,
+  "configs": "stock,v03_12,stock_ram",
+  "port": 8765,
+  "out": null,
+  "merge": false
+ },
+ "chip": "Apple M4",
+ "ram_gb": 16,
+ "configs": {
+  "stock": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 17.529,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 152",
+     "prompt_tokens": 7385,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 15.914,
+     "text": "Don't forget to implement the `_disassemble_bytes` function.\n<end_of_turn>https://github.com/",
+     "prompt_tokens": 7940,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 15.505,
+     "text": "```python\nimport sys\nimport os\nimport stat\nimport struct\nimport threading\nimport time\nimport contextlib",
+     "prompt_tokens": 8051,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 17.571,
+     "text": "```python\n# file: imp.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 9178,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 14.666,
+     "text": "Run tests, round 2: test_0_18 PASSED, test_0_19 PASSED",
+     "prompt_tokens": 7633,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 17.45,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>Edwin.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n",
+     "prompt_tokens": 8188,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 15.162,
+     "text": "Review the failed tests and identify the most likely cause.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>",
+     "prompt_tokens": 8299,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 17.27,
+     "text": "Run all tests.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n",
+     "prompt_tokens": 9426,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 14.169,
+     "text": "Run tests, round 3: test_0_28 PASSED, test_0_29 PASSED",
+     "prompt_tokens": 7881,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 17.306,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8435,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 16.249,
+     "text": "Focus on the failing tests, particularly those related to the \u201cPath\u201d module.<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8547,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 18.922,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9673,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 17.384,
+     "text": "Run tests, round 4: test_0_42 PASSED, test_0_43 PASSED",
+     "prompt_tokens": 8129,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 17.342,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8683,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 16.503,
+     "text": "Implement the \u201cPath\u201d module\u2019s logic to handle the \u201cPath\u201d errors.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8795,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 20.001,
+     "text": "Run all tests.<end_of_turn>.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9921,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 20.278,
+     "text": "Run tests, round 5: test_0_52 PASSED, test_0_53 PASSED",
+     "prompt_tokens": 8377,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 18.114,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8931,
+     "cached_tokens": 14,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 19.014,
+     "text": "Refactor the \u201cPath\u201d module to handle the \u201cPath\u201d errors gracefully.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9043,
+     "cached_tokens": 14,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 21.552,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 10169,
+     "cached_tokens": 14,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 16.721,
+   "ttft_median": 17.288,
+   "ttft_p90": 17.45,
+   "ttft_max": 20.001,
+   "restart_ttft_median": 19.646
+  },
+  "v03_12": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 18.211,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 152",
+     "prompt_tokens": 7385,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 15.493,
+     "text": "Don't forget to implement the `_disassemble_bytes` function.\n<end_of_turn>https://github.com/",
+     "prompt_tokens": 7940,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 16.954,
+     "text": "```python\nimport sys\nimport os\nimport stat\nimport struct\nimport threading\nimport time\nimport contextlib",
+     "prompt_tokens": 8051,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 20.1,
+     "text": "```python\n# file: imp.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 9178,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 1.426,
+     "text": "Run all tests.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\u0440\u0430\u043a\u0442\u0435\u0440\u0438\u0441\u0442\u0438\u043a\u0438  \n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n",
+     "prompt_tokens": 7633,
+     "cached_tokens": 7409,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 1.426,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>Edwin.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n",
+     "prompt_tokens": 8188,
+     "cached_tokens": 7964,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 1.484,
+     "text": "Review the failed tests and identify the most likely cause.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>",
+     "prompt_tokens": 8299,
+     "cached_tokens": 8075,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 2.133,
+     "text": "Run all tests.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n",
+     "prompt_tokens": 9426,
+     "cached_tokens": 9202,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 1.894,
+     "text": "Run all tests.<end_of_turn><end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 7880,
+     "cached_tokens": 7632,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 2.039,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8435,
+     "cached_tokens": 8187,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 1.944,
+     "text": "Focus on the failing tests, particularly those related to the \u201cPath\u201d module.<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8547,
+     "cached_tokens": 8323,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 2.516,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9673,
+     "cached_tokens": 9425,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 2.377,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8128,
+     "cached_tokens": 7904,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 1.835,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8683,
+     "cached_tokens": 8459,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 2.089,
+     "text": "Implement the \u201cPath\u201d module\u2019s logic to handle the \u201cPath\u201d errors.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8795,
+     "cached_tokens": 8571,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 2.695,
+     "text": "Run all tests.<end_of_turn>.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9921,
+     "cached_tokens": 9697,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 3.238,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8376,
+     "cached_tokens": 8152,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 0.581,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8931,
+     "cached_tokens": 8707,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 0.991,
+     "text": "Refactor the \u201cPath\u201d module to handle the \u201cPath\u201d errors gracefully.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9043,
+     "cached_tokens": 8819,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 1.615,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 10169,
+     "cached_tokens": 9945,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {
+    "ram_hits": 0,
+    "ssd_loads": 4,
+    "prefetch_hits": 0,
+    "prefetch_partial": 0,
+    "saves": 8,
+    "bytes_written": 116447752,
+    "bytes_read": 192101488,
+    "save_s": 0.1919365840149112,
+    "load_s": 0.17403391801053658
+   },
+   "disk_gb": 0.828,
+   "build_ttft_median": 17.582,
+   "ttft_median": 1.992,
+   "ttft_p90": 2.377,
+   "ttft_max": 2.695,
+   "restart_ttft_median": 1.303
+  },
+  "stock_ram": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 17.151,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 152",
+     "prompt_tokens": 7385,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 14.752,
+     "text": "Don't forget to implement the `_disassemble_bytes` function.\n<end_of_turn>https://github.com/",
+     "prompt_tokens": 7940,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 14.96,
+     "text": "```python\nimport sys\nimport os\nimport stat\nimport struct\nimport threading\nimport time\nimport contextlib",
+     "prompt_tokens": 8051,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 17.563,
+     "text": "```python\n# file: imp.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 9178,
+     "cached_tokens": 14,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.239,
+     "text": "Run all tests.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\u0440\u0430\u043a\u0442\u0435\u0440\u0438\u0441\u0442\u0438\u043a\u0438  \n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n",
+     "prompt_tokens": 7633,
+     "cached_tokens": 7409,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.251,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>Edwin.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n",
+     "prompt_tokens": 8188,
+     "cached_tokens": 7964,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.229,
+     "text": "Review the failed tests and identify the most likely cause.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>",
+     "prompt_tokens": 8299,
+     "cached_tokens": 8075,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.236,
+     "text": "Run all tests.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n",
+     "prompt_tokens": 9426,
+     "cached_tokens": 9202,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 0.255,
+     "text": "Run all tests.<end_of_turn><end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 7880,
+     "cached_tokens": 7632,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 0.566,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8435,
+     "cached_tokens": 8187,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 0.235,
+     "text": "Focus on the failing tests, particularly those related to the \u201cPath\u201d module.<end_of_turn>\n<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8547,
+     "cached_tokens": 8323,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 0.287,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9673,
+     "cached_tokens": 9425,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 0.265,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8128,
+     "cached_tokens": 7904,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 0.242,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8683,
+     "cached_tokens": 8459,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 0.248,
+     "text": "Implement the \u201cPath\u201d module\u2019s logic to handle the \u201cPath\u201d errors.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8795,
+     "cached_tokens": 8571,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 0.241,
+     "text": "Run all tests.<end_of_turn>.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9921,
+     "cached_tokens": 9697,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 20.055,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8376,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 17.895,
+     "text": "Examine the code.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 8931,
+     "cached_tokens": 14,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 17.661,
+     "text": "Refactor the \u201cPath\u201d module to handle the \u201cPath\u201d errors gracefully.<end_of_turn>\n<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 9043,
+     "cached_tokens": 14,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 19.959,
+     "text": "Run all tests.<end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn><end_of_turn>",
+     "prompt_tokens": 10169,
+     "cached_tokens": 14,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 16.056,
+   "ttft_median": 0.245,
+   "ttft_p90": 0.265,
+   "ttft_max": 0.566,
+   "restart_ttft_median": 18.927
+  }
+ },
+ "identical_replies": {
+  "v03_12_vs_stock_ram": "20/20",
+  "v03_12_vs_stock": "16/20"
+ }
+}

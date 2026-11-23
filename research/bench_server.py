@@ -105,7 +105,8 @@ def stop(p):
 
 def turn(messages):
     body = json.dumps({"model": args.model, "messages": messages, "max_tokens": args.max_tokens,
-                       "temperature": 0.0, "stream": True, "stream_options": {"include_usage": True}}).encode()
+                       "temperature": 0.0, "stream": True, "stream_options": {"include_usage": True},
+                       "chat_template_kwargs": {"enable_thinking": False}}).encode()
     req = urllib.request.Request(URL + "/v1/chat/completions", body, {"Content-Type": "application/json"})
     t0 = time.perf_counter()
     ttft, text, usage = None, [], {}

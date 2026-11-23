@@ -1,4 +1,6 @@
 """SSD tier for mlx_lm.server's prompt cache, on synthetic caches (no model download)."""
+import os
+
 import mlx.core as mx
 import pytest
 from mlx_lm.models.cache import KVCache, QuantizedKVCache
@@ -120,17 +122,6 @@ def test_server_restart_reloads_from_ssd(tmp_path):
     assert rest == [1, 2] and same(a, cache)
 
 
-def test_unsupported_cache_types_stay_ram_only(tmp_path):
-    from mlx_lm.models.cache import RotatingKVCache
-    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
-    c = [RotatingKVCache(max_size=64) for _ in range(LAYERS)]
-    k = mx.zeros((1, HEADS, 10, DIM))
-    for x in c:
-        x.update_and_fetch(k, k)
-    pc.insert_cache(M, toks(10), c)
-    assert pc.stats["saves"] == 0
-
-
 def test_rewritten_history_reuses_the_shared_start(tmp_path):
     """Qwen3's template drops the empty <think></think> from past replies, so the saved
     chat (prompt + generated reply) is not a prefix of the next request. The SSD tier must
@@ -211,3 +202,123 @@ def test_a_shorter_chat_does_not_delete_a_longer_one(tmp_path):
     pc.insert_cache(M, toks(500), a)
     pc.insert_cache(M, toks(480) + [1, 2, 3], chat(483, 21))  # regenerated last reply, shorter
     assert 500 in {s["saved"] for s in pc.stores[M].sessions.values()}
+
+
+# ---- every other cache layout: sliding window, hybrid recurrent, unknown types ----------
+from mlx.utils import tree_flatten  # noqa: E402
+from mlx_lm.models.cache import ArraysCache, ConcatenateKVCache, RotatingKVCache  # noqa: E402
+
+
+def mixed(kind):
+    """Per-layer caches the way models build them: Gemma 3 (sliding window + full attention),
+    Qwen3.5 (linear attention state + full attention), or a type purgekv does not know."""
+    other = {"sliding": lambda: RotatingKVCache(max_size=64), "hybrid": lambda: ArraysCache(size=2),
+             "unknown": ConcatenateKVCache, "recurrent": lambda: ArraysCache(size=2)}[kind]
+    if kind == "recurrent":
+        return [other() for _ in range(LAYERS)]
+    return [KVCache() if i % 2 else other() for i in range(LAYERS)]
+
+
+def advance(cache, n, seed):
+    """Process n more tokens: attention layers append K/V, recurrent layers replace their state."""
+    k = mx.random.normal((1, HEADS, n, DIM), key=mx.random.key(seed)).astype(mx.bfloat16)
+    for i, c in enumerate(cache):
+        if isinstance(c, ArraysCache):
+            c[0] = mx.random.normal((1, 3, 8), key=mx.random.key(seed + i))
+            c[1] = mx.random.normal((1, 2, 4, 4), key=mx.random.key(seed + 100 + i))
+        else:
+            c.update_and_fetch(k, k * 0.5)
+    return cache
+
+
+def same_state(a, b):
+    if [type(x) for x in a] != [type(y) for y in b]:
+        return False
+    for x, y in zip(a, b):
+        if type(x) is KVCache:  # its state can include unused preallocated slots
+            if x.offset != y.offset or not same([x], [y]):
+                return False
+            continue
+        fx, fy = tree_flatten(x.state), tree_flatten(y.state)
+        if len(fx) != len(fy):
+            return False
+        for (_, u), (_, v) in zip(fx, fy):
+            if isinstance(u, mx.array) != isinstance(v, mx.array):
+                return False
+            if isinstance(u, mx.array) and not (u.shape == v.shape and mx.array_equal(u, v).item()):
+                return False
+            if not isinstance(u, mx.array) and u != v:
+                return False
+    return True
+
+
+@pytest.mark.parametrize("kind", ["sliding", "hybrid", "unknown"])
+def test_any_cache_layout_comes_back_from_ssd(tmp_path, kind):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = advance(mixed(kind), 100, 30)  # 100 > the 64-token window: the sliding layers wrapped
+    pc.insert_cache(M, toks(100), a)
+    pc.insert_cache(M, toks(50, 10_000), advance(mixed(kind), 50, 31))  # evicts a from RAM
+    cache, rest = pc.fetch_nearest_cache(M, toks(100) + [7, 8])
+    assert pc.stats["ssd_loads"] == 1 and rest == [7, 8] and same_state(a, cache)
+
+
+def test_untrimmable_chat_is_reused_only_at_its_saved_length(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = advance(mixed("hybrid"), 300, 32)  # a recurrent state cannot be rewound
+    pc.insert_cache(M, toks(300), a)
+    pc.insert_cache(M, toks(50, 10_000), advance(mixed("hybrid"), 50, 33))
+    cache, rest = pc.fetch_nearest_cache(M, toks(250) + [1, 2])  # diverges inside the saved chat
+    assert cache is None and pc.stats["ssd_loads"] == 0
+    cache, rest = pc.fetch_nearest_cache(M, toks(300) + [1, 2])
+    assert pc.stats["ssd_loads"] == 1 and rest == [1, 2] and same_state(a, cache)
+
+
+def test_untrimmable_checkpoints_are_kept_and_attention_layers_write_deltas(tmp_path):
+    """mlx-lm checkpoints at the end of the prompt, then saves prompt + reply. For a model
+    that cannot rewind, the checkpoint is what the next request (with the template's rewritten
+    reply) reuses, so it must stay; the attention layers still share its files."""
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = advance(mixed("hybrid"), 300, 34)
+    pc.insert_cache(M, toks(300), a, cache_type="user")
+    first = pc.stats["bytes_written"]
+    advance(a, 30, 35)
+    pc.insert_cache(M, toks(330), a)
+    st = pc.stores[M]
+    assert sorted(s["saved"] for s in st.sessions.values()) == [300, 330]
+    snap = os.path.getsize(os.path.join(st.root, next(s["info"]["snap"] for s in st.sessions.values())))
+    kv_first, kv_next = first - snap, pc.stats["bytes_written"] - first - snap
+    assert kv_next == pytest.approx(kv_first * 30 / 300, rel=0.01)
+
+
+def test_mixed_layout_survives_restart(tmp_path):
+    a = advance(mixed("sliding"), 120, 36)
+    SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0).insert_cache(M, toks(120), a)
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    cache, rest = pc.fetch_nearest_cache(M, toks(120) + [3])
+    assert rest == [3] and same_state(a, cache)
+
+
+def test_mixed_layout_prefetch(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=GB)
+    a = advance(mixed("hybrid"), 200, 37)
+    pc.insert_cache(M, toks(200), a)
+    pc.insert_cache(M, toks(50, 10_000), advance(mixed("hybrid"), 50, 38))
+    next(iter(pc.prefetched.values()))[0].result()
+    cache, rest = pc.fetch_nearest_cache(M, toks(200) + [5])
+    assert pc.stats["prefetch_hits"] == 1 and same_state(a, cache)
+
+
+def test_forgetting_a_chat_removes_its_snapshot(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    pc.insert_cache(M, toks(100), advance(mixed("sliding"), 30, 39))  # window not full: trimmable
+    st = pc.stores[M]
+    key = next(iter(st.sessions))
+    snap = os.path.join(st.root, st.sessions[key]["info"]["snap"])
+    pc._forget(M, key)
+    assert not os.path.exists(snap)
+
+
+def test_pure_recurrent_model_stays_ram_only(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
+    pc.insert_cache(M, toks(10), advance(mixed("recurrent"), 10, 40))
+    assert pc.stats["saves"] == 0  # no layer reports a token count to key the save on

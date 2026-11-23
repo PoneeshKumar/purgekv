@@ -142,12 +142,24 @@ to MLX on the Mac.
 
 ## Supported models
 
-| | Status |
-|---|---|
-| Llama 3.x, Qwen3 | Supported; tested for identical output; Qwen3-8B tested with purgekv-server |
-| Gemma 3 (sliding window), Qwen3.5 (hybrid attention) | Not yet supported: purgekv-server keeps them in RAM only (stock behavior); the streaming library refuses them with a clear error |
+purgekv-server works with any model `mlx_lm.server` runs. Layers that grow with the chat
+(full attention, plain or `--kv-bits 8`) are appended to SSD a turn at a time. Every
+other layer type (sliding window, linear attention / recurrent state, anything mlx-lm
+adds) is saved whole with mlx-lm's own `save_prompt_cache`; those layers have a fixed
+size, so the snapshot stays small.
 
-`check_supported(model)` tells you before you start.
+| Model family | Cache layout | purgekv-server | Streaming library |
+|---|---|---|---|
+| Llama 3.x, Qwen3, Mistral… | full attention | Tested: Llama 3.2 1B/3B, Qwen3-8B | Supported |
+| Gemma 3 | sliding window + full attention | Tested: Gemma 3 1B, 17.3 s → 1.99 s per agent turn | Refused with a clear error |
+| Qwen3.5 | linear attention + full attention | Tested: Qwen3.5 0.8B, 12.3 s → 0.94 s | Refused with a clear error |
+| Anything else mlx-lm runs | any | Expected to work (untested) | `check_supported(model)` tells you |
+
+A chat whose cache cannot be rewound (a full sliding window, a recurrent state) is reused
+only at exactly the length it was saved, the same rule as mlx-lm's RAM cache, which saves
+a checkpoint at the end of each prompt for this. Models with no full-attention layer at
+all stay in RAM only. Replies matched stock mlx-lm with RAM for every chat in 20 of 20
+turns on both Gemma 3 and Qwen3.5.
 
 ## Tests
 
@@ -170,9 +182,9 @@ The full log, with every experiment, negative result and raw data, is in
 
 ## Limits
 
-Tested on one M4 MacBook (16 GB) with the standard KV cache; Llama 3.x and Qwen3 only.
-purgekv-server keeps other cache layouts (sliding window, hybrid, draft models) in RAM only,
-and does not yet cap its disk use: delete `--kv-dir` (default `~/.cache/purgekv/server`) to clear it.
+Tested on one M4 MacBook (16 GB). purgekv-server does not yet cap its disk use: delete
+`--kv-dir` (default `~/.cache/purgekv/server`) to clear it. Models whose cache cannot be
+rewound keep each prompt checkpoint on disk (4 Qwen3.5 agents with 8K-token chats: 1.6 GB).
 With chat templates that rewrite earlier replies (Qwen3 drops the empty `<think></think>`),
 each save also rewrites the previous turn, so SSD writes are about 2× the minimum.
 

@@ -272,6 +272,34 @@ the sandboxed backtest; round 4, equal-weighted momentum, passed with out-of-sam
 up to **9.96× the $100,000 paper account**, so the demo now sizes orders in code and keeps
 the agent's text only as a note. Not investment advice.
 
+### M. Every cache layout: Gemma 3 and Qwen3.5 (`purgekv/server.py`, `research/bench_server.py`)
+Gemma 3 1B builds 22 sliding-window layers (`RotatingKVCache`, 512 tokens) and 4
+full-attention layers. Qwen3.5 0.8B builds 18 linear-attention layers (`ArraysCache`, a
+fixed-size recurrent state) and 6 full-attention layers. Neither can be rewound once the
+window is full, so mlx-lm's RAM cache reuses them only at an exact saved length; the
+server saves a checkpoint at the end of each prompt for that.
+
+purgekv-server keeps the append-only segments for the full-attention layers and saves
+every other layer whole with mlx-lm's `save_prompt_cache`, one snapshot per saved chat.
+A chat that cannot be rewound is only reused at its exact saved length, and its prompt
+checkpoints stay on disk instead of being folded into the next save.
+
+Same setup as K (4 agents, 8K-token contexts, 24-token greedy replies, 1.5 s tool time,
+thinking off), RAM budget for about one chat (0.06 GB for Gemma, 0.12 GB for Qwen3.5):
+
+| Median time to first token | Stock | purgekv-server | Stock, RAM for every chat |
+|---|---|---|---|
+| Gemma 3 1B, agent turn | 17.3 s | **1.99 s** (worst 2.70 s) | 0.25 s |
+| Gemma 3 1B, after a restart | 19.6 s | **1.30 s** | 18.9 s |
+| Qwen3.5 0.8B, agent turn | 12.3 s | **0.94 s** (worst 1.58 s) | 0.26 s |
+| Qwen3.5 0.8B, after a restart | 13.8 s | **0.97 s** | 14.0 s |
+
+Replies matched stock with RAM for every chat in 20 of 20 turns on both models (Gemma
+matched stock recomputing in 16 of 20: mlx-lm's cached and uncached paths differ
+slightly, as in K). Disk after the run: 0.83 GB (Gemma), 1.6 GB (Qwen3.5, mostly kept
+prompt checkpoints). One machine, one run per config, on battery for both configs.
+Raw data: `results/server_gemma-3-1b-it-4bit.json`, `results/server_Qwen3.5-0.8B-4bit.json`.
+
 ## Conclusions
 1. **For a local LLM server on a Mac: write idle KV caches to SSD and drop them from RAM.**
    This removed the swap storm completely and resumed fastest. It's simple, and it's
@@ -305,7 +333,7 @@ research/bench_latency.py       A      research/bench_pressure2.py  B (4 modes) 
 research/test_cache_types.py    C      research/test_purgeable.py   D             results/  raw JSON
 research/bench_compress.py      E      research/bench_combined.py   F             research/estimate_studio.py  G
 research/bench_stream.py        H      research/bench_scale.py      I             research/probe_16gb.py       J
-research/bench_server.py        K      examples/trading_agents.py   L
+research/bench_server.py        K, M   examples/trading_agents.py   L
 research/bench_pressure.py      first pressure version (Low Power Mode runs, superseded by v2)
 research/run_all.sh    reproduce everything
 ```

@@ -14,6 +14,8 @@ client (chat apps, coding agents) gets this with no code changes. What it adds:
     tool (agents). If it is pushed out of RAM, the server reads it back from SSD in the
     background, oldest-waiting first, up to --prefetch-gb, so the next request does
     not wait for the SSD.
+  * Any model mlx_lm.server runs: full-attention layers are appended a turn at a time;
+    sliding-window and recurrent layers (Gemma 3, Qwen3.5) are saved whole per turn.
   * --kv-bits 8 (an mlx-lm flag) caches are stored as is: about half the bytes to write,
     store and read back. Outputs can differ slightly from full precision (mlx-lm's
     trade-off, not purgekv's).
@@ -22,7 +24,8 @@ import argparse, json, logging, os, sys, time, uuid
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
-from mlx_lm.models.cache import KVCache, LRUPromptCache, QuantizedKVCache
+from mlx_lm.models.cache import (KVCache, LRUPromptCache, QuantizedKVCache, can_trim_prompt_cache,
+                                  load_prompt_cache, save_prompt_cache)
 
 from .segstore import SegmentKVStore, INDEX
 
@@ -68,15 +71,16 @@ class SSDPromptCache(LRUPromptCache):
             self.stores[model] = st
         return self.stores[model]
 
-    def _disk_match(self, model, tokens, limit, partial=False):
+    def _disk_match(self, model, tokens, limit, partial=False, load=False):
         """Saved session sharing the longest start with `tokens` (at most `limit` tokens).
 
         partial=False: the session must be a whole prefix of `tokens` (to fork from it).
         partial=True: it may run longer and be trimmed back, like mlx-lm's RAM cache does.
         Chat templates often rewrite earlier turns (Qwen3 drops the empty <think></think>
         block from past replies), so the saved chat is rarely an exact prefix of the next
-        request. Returns (session, number of tokens to reuse)."""
-        self._store(model)
+        request. load=True: a session whose cache cannot be trimmed only counts if all of it
+        is reused. Returns (session, number of tokens to reuse)."""
+        store = self._store(model)
         best, best_n = None, 0
         if limit <= 0:
             return None, 0
@@ -91,6 +95,8 @@ class SSDPromptCache(LRUPromptCache):
             common = n if eq.all() else int(np.argmin(eq))
             if not partial and common < len(tok):
                 continue
+            if load and common < len(tok) and not store.sessions[k].get("info", {}).get("trim", True):
+                continue
             if common > best_n:
                 best, best_n = k, common
         return best, best_n
@@ -104,7 +110,7 @@ class SSDPromptCache(LRUPromptCache):
         cache, rest = super().fetch_nearest_cache(model, tokens)
         ram_n = len(tokens) - len(rest)
         try:
-            key, n = self._disk_match(model, tokens, len(tokens) - 1, partial=True)  # leave >= 1 token
+            key, n = self._disk_match(model, tokens, len(tokens) - 1, partial=True, load=True)  # leave >= 1 token
         except Exception:
             log.exception("purgekv: SSD lookup failed")
             key, n = None, 0
@@ -117,8 +123,10 @@ class SSDPromptCache(LRUPromptCache):
             return cache, rest
         try:
             loaded = self._load(model, key)
-            extra = loaded[0].offset - n
+            extra = self._length(loaded) - n
             if extra > 0:  # the saved chat runs past the shared start: drop the tail
+                if not can_trim_prompt_cache(loaded):
+                    raise RuntimeError("cannot trim this cache")  # _disk_match should prevent this
                 for c in loaded:
                     c.trim(extra)
         except Exception:
@@ -153,22 +161,42 @@ class SSDPromptCache(LRUPromptCache):
         self._schedule()
 
     # ---- SSD tier -------------------------------------------------------------
+    # A chat's cache is a list of per-layer caches. Layers that grow with the chat
+    # (KVCache, QuantizedKVCache) go to the segment store: only new tokens are written,
+    # and chats with a common start share its files. Every other layer type (sliding
+    # window, linear attention / recurrent state, anything mlx-lm adds later) is saved
+    # whole with mlx-lm's own save_prompt_cache, one snapshot per saved chat. Those
+    # layers have a fixed size, so the snapshot stays small however long the chat is.
+    # A chat with layers that cannot be trimmed is only reused at exactly the length it
+    # was saved, as in mlx-lm's RAM cache, which also checkpoints at the end of each prompt.
+
+    @staticmethod
+    def _length(cache):
+        for c in cache:
+            if isinstance(getattr(c, "offset", None), (int, np.integer)):
+                return int(c.offset)
+        return None  # e.g. a pure recurrent model: no token count to key the save on
+
     def _save(self, model, tokens, cache):
-        kinds = {type(c) for c in cache}
-        if not cache or not (kinds <= {KVCache} or kinds <= {QuantizedKVCache}):
-            return  # other cache layouts (sliding window, hybrid, draft models) stay RAM-only
-        n = cache[0].offset
-        if n <= 0 or len(tokens) < n or not all(isinstance(x, (int, np.integer)) for x in tokens[:n]):
+        n = self._length(cache) if cache else None
+        if not n or len(tokens) < n or not all(isinstance(x, (int, np.integer)) for x in tokens[:n]):
             return
+        layout = ["kv" if type(c) in (KVCache, QuantizedKVCache) else "snap" for c in cache]
+        kv = [c for c, k in zip(cache, layout) if k == "kv"]
+        snap = [c for c, k in zip(cache, layout) if k == "snap"]
+        if len({type(c) for c in kv}) > 1:
+            return  # mixed full-precision and quantized layers: leave it to RAM
         toks = np.asarray(tokens[:n], np.int32)
         store = self._store(model)
+        trimmable = can_trim_prompt_cache(cache)
         # The saved chat sharing the longest start with this one. Often it is not a whole
         # prefix: chat templates rewrite earlier turns (Qwen3 drops the empty <think></think>
         # from past replies), so the chats diverge inside the previous turn.
         src, m = self._disk_match(model, toks, n, partial=True)
-        quant = isinstance(cache[0], QuantizedKVCache)
-        if src is not None and any(("quant" in meta) != quant for _, meta in store.sessions[src]["segs"]):
-            src, m = None, 0  # mlx-lm switched to quantized mid-chat: start a fresh file set
+        quant = bool(kv) and isinstance(kv[0], QuantizedKVCache)
+        if src is not None and (store.sessions[src]["info"].get("layout", layout) != layout or
+                                any(("quant" in meta) != quant for _, meta in store.sessions[src]["segs"])):
+            src, m = None, 0  # a different cache layout (mlx-lm switched to quantized): start fresh
         src_n = len(self.tokens[(model, src)]) if src is not None else 0
         if src is not None and m == n == src_n:
             self.waiting.pop((model, src), None)
@@ -176,20 +204,30 @@ class SSDPromptCache(LRUPromptCache):
             return
         t = time.perf_counter()
         key = uuid.uuid4().hex[:16]
+        written, info = 0, {"tokens": f"{key}.tok", "layout": layout, "trim": trimmable}
+        if snap:  # write it first: if a layer cannot be serialized, nothing is half-saved
+            info["snap"] = f"{key}.snap.safetensors"
+            path = os.path.join(store.root, info["snap"])
+            save_prompt_cache(path, snap)
+            written += os.path.getsize(path)
         shared = store.fork(src, key, upto=m) if src is not None else 0  # whole segments before the divergence
-        # Write tokens shared..n, split at m: the next turn diverges after m (inside this
-        # turn's reply), so it can keep the segment that ends at m.
-        written = store.save(key, cache, upto=m) if shared < m else 0
-        written += store.save(key, cache)
-        tf = f"{key}.tok"
-        toks.tofile(os.path.join(store.root, tf))
-        store.sessions[key]["info"] = {"tokens": tf}
+        if kv:
+            # Write tokens shared..n, split at m: the next turn diverges after m (inside this
+            # turn's reply), so it can keep the segment that ends at m.
+            written += store.save(key, kv, upto=m) if shared < m else 0
+            written += store.save(key, kv)
+        else:
+            store.sessions[key] = {"saved": n, "segs": []}
+        toks.tofile(os.path.join(store.root, info["tokens"]))
+        store.sessions[key]["info"] = info
         self.tokens[(model, key)] = toks
-        last = store.sessions[src]["segs"][-1][1]["shapes"][0][2] if src is not None else 0
-        if src is not None and n >= src_n and m >= src_n - last:
+        segs = store.sessions[src]["segs"] if src is not None else []
+        last = segs[-1][1]["shapes"][0][2] if segs else src_n
+        if src is not None and trimmable and n >= src_n and m >= src_n - last:
             # The new chat is at least as long and repeats all of src but (at most) its last
             # saved segment, as rewritten by the template: src is superseded. Its shared files
             # live on in `key`. A chat that branches off earlier (an edited message) keeps src.
+            # Untrimmable chats keep it: only an exact-length checkpoint can be reused.
             self._forget(model, src)
         store.save_index()
         self.waiting[(model, key)] = None
@@ -202,30 +240,55 @@ class SSDPromptCache(LRUPromptCache):
     def _forget(self, model, key):
         store = self.stores[model]
         info = store.sessions.get(key, {}).get("info", {})
-        store.delete(key)  # removes only files no other session uses
-        if info.get("tokens"):
-            try:
-                os.remove(os.path.join(store.root, info["tokens"]))
-            except FileNotFoundError:
-                pass
+        store.delete(key)  # removes only segment files no other session uses
+        for f in (info.get("tokens"), info.get("snap")):
+            if f:
+                try:
+                    os.remove(os.path.join(store.root, f))
+                except FileNotFoundError:
+                    pass
         self.tokens.pop((model, key), None)
         self.waiting.pop((model, key), None)
         fut = self.prefetched.pop((model, key), None)
         if fut:
             fut[0].cancel()
 
+    @staticmethod
+    def _read(store, key, segs, snap):
+        """File I/O only (no MLX): safe on the prefetch thread."""
+        raw = store.read_raw(key, segs)
+        if snap:  # read it once so the load below comes from the page cache
+            with open(snap, "rb") as f:
+                while f.read(1 << 24):
+                    pass
+        return raw
+
+    def _files(self, model, key):
+        store = self.stores[model]
+        s = store.sessions[key]
+        snap = s["info"].get("snap")
+        return list(s["segs"]), os.path.join(store.root, snap) if snap else None
+
     def _load(self, model, key):
         store = self._store(model)
         t = time.perf_counter()
+        segs, snap = self._files(model, key)
         pf = self.prefetched.pop((model, key), None)
         if pf is not None:
             self.stats["prefetch_hits" if pf[0].done() else "prefetch_partial"] += 1
             raw = pf[0].result()
         else:
-            raw = store.read_raw(key)
-        cache = store.load(key, raw)
+            raw = self._read(store, key, segs, snap)
+        layout = store.sessions[key]["info"].get("layout")
+        kv = store.load(key, raw) if segs else []
+        if layout is None:  # saved by 0.3: every layer is a KVCache
+            cache = kv
+        else:
+            snaps = iter(load_prompt_cache(snap) if snap else [])
+            kvs = iter(kv)
+            cache = [next(kvs) if k == "kv" else next(snaps) for k in layout]
         self.stats["ssd_loads"] += 1
-        self.stats["bytes_read"] += sum(b.size for _, _, b in raw)
+        self.stats["bytes_read"] += sum(b.size for _, _, b in raw) + (os.path.getsize(snap) if snap else 0)
         self.stats["load_s"] += time.perf_counter() - t
         log.info(f"purgekv: loaded {store.sessions[key]['saved']} tokens from SSD "
                  f"({'prefetched' if pf else 'cold'}) in {time.perf_counter() - t:.2f}s")
@@ -233,7 +296,7 @@ class SSDPromptCache(LRUPromptCache):
 
     def _schedule(self):
         """Prefetch chats that are waiting for their next turn and are no longer in RAM.
-        Runs on the generation thread; the I/O thread only reads files into numpy."""
+        Runs on the generation thread; the I/O thread only reads files."""
         if self.prefetch_bytes <= 0:
             return
         try:
@@ -244,11 +307,11 @@ class SSDPromptCache(LRUPromptCache):
                 if k in self.prefetched or self._in_ram(k[0], self.tokens[k]):
                     continue
                 store = self.stores[k[0]]
-                segs = list(store.sessions[k[1]]["segs"])
-                nb = sum(os.path.getsize(p) for p, _ in segs)
+                segs, snap = self._files(*k)
+                nb = sum(os.path.getsize(p) for p, _ in segs) + (os.path.getsize(snap) if snap else 0)
                 if used + nb > self.prefetch_bytes:
                     break
-                self.prefetched[k] = (self._io.submit(store.read_raw, k[1], segs), nb)
+                self.prefetched[k] = (self._io.submit(self._read, store, k[1], segs, snap), nb)
                 used += nb
         except Exception:
             log.exception("purgekv: prefetch scheduling failed")

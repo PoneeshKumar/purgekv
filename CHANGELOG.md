@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **purgekv-server works with any model mlx-lm runs.** Full-attention layers keep the
+  append-only segments; every other layer type (sliding window, linear attention /
+  recurrent state, unknown types) is saved whole with mlx-lm's `save_prompt_cache`.
+  Chats that cannot be rewound are reused only at their exact saved length, and their
+  prompt checkpoints are kept. 4 agents, 8K-token chats, RAM for about one:
+  Gemma 3 1B 17.3 s → 1.99 s per turn, Qwen3.5 0.8B 12.3 s → 0.94 s; after a restart
+  19.6 s → 1.30 s and 13.8 s → 0.97 s. Replies matched stock mlx-lm with RAM for every
+  chat in 20 of 20 turns on both.
+- `research/bench_server.py` turns thinking off (`enable_thinking: false`), so models
+  that think by default (Qwen3.5) are compared on their replies.
+
 ## 0.3.1 — 2026-11-22
 
 ### Fixed

@@ -1,0 +1,607 @@
+{
+ "args": {
+  "model": "mlx-community/Qwen3.5-0.8B-4bit",
+  "agents": 4,
+  "ctx": 8192,
+  "rounds": 4,
+  "tool_s": 1.5,
+  "ram_gb": 0.12,
+  "prefetch_gb": 0.5,
+  "max_tokens": 24,
+  "configs": "stock,v03_12,stock_ram",
+  "port": 8765,
+  "out": null,
+  "merge": false
+ },
+ "chip": "Apple M4",
+ "ram_gb": 16,
+ "configs": {
+  "stock": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 12.709,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 1524",
+     "prompt_tokens": 6830,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 11.072,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 7216,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 11.526,
+     "text": "```python\nimport os\nimport re\nimport sys\n\n# Expression parsing for plural form selection.\n_token_pattern =",
+     "prompt_tokens": 7467,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 12.912,
+     "text": "```python\n# file: pipes.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 8210,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 10.733,
+     "text": "```python\n```",
+     "prompt_tokens": 7077,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 11.206,
+     "text": "```python\n```",
+     "prompt_tokens": 7463,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 12.026,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7714,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 12.991,
+     "text": "```python\n```",
+     "prompt_tokens": 8457,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 10.976,
+     "text": "```python\n```",
+     "prompt_tokens": 7304,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 12.373,
+     "text": "```python\n```",
+     "prompt_tokens": 7690,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 12.046,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7950,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 14.387,
+     "text": "```python\n```",
+     "prompt_tokens": 8684,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 12.282,
+     "text": "```python\n```",
+     "prompt_tokens": 7531,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 13.323,
+     "text": "```python\n```",
+     "prompt_tokens": 7917,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 12.928,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8186,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 14.392,
+     "text": "```python\n```",
+     "prompt_tokens": 8911,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 14.296,
+     "text": "```python\n```",
+     "prompt_tokens": 7758,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 12.858,
+     "text": "```python\n```",
+     "prompt_tokens": 8144,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 13.253,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8422,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 14.857,
+     "text": "```python\n```",
+     "prompt_tokens": 9138,
+     "cached_tokens": 17,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 12.117,
+   "ttft_median": 12.328,
+   "ttft_p90": 13.323,
+   "ttft_max": 14.392,
+   "restart_ttft_median": 13.774
+  },
+  "v03_12": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 13.639,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 1524",
+     "prompt_tokens": 6830,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 10.667,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 7216,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 11.861,
+     "text": "```python\nimport os\nimport re\nimport sys\n\n# Expression parsing for plural form selection.\n_token_pattern =",
+     "prompt_tokens": 7467,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 13.762,
+     "text": "```python\n# file: pipes.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 8210,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.78,
+     "text": "```python\n```",
+     "prompt_tokens": 7077,
+     "cached_tokens": 6826,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 1.347,
+     "text": "```python\n```",
+     "prompt_tokens": 7463,
+     "cached_tokens": 7212,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 1.146,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7714,
+     "cached_tokens": 7463,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 1.022,
+     "text": "```python\n```",
+     "prompt_tokens": 8457,
+     "cached_tokens": 8206,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 0.829,
+     "text": "```python\n```",
+     "prompt_tokens": 7304,
+     "cached_tokens": 7073,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 1.208,
+     "text": "```python\n```",
+     "prompt_tokens": 7690,
+     "cached_tokens": 7459,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 1.547,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7950,
+     "cached_tokens": 7710,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 0.732,
+     "text": "```python\n```",
+     "prompt_tokens": 8684,
+     "cached_tokens": 8453,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 0.865,
+     "text": "```python\n```",
+     "prompt_tokens": 7531,
+     "cached_tokens": 7300,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 1.575,
+     "text": "```python\n```",
+     "prompt_tokens": 7917,
+     "cached_tokens": 7686,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 0.732,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8186,
+     "cached_tokens": 7946,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 0.667,
+     "text": "```python\n```",
+     "prompt_tokens": 8911,
+     "cached_tokens": 8680,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 2.006,
+     "text": "```python\n```",
+     "prompt_tokens": 7758,
+     "cached_tokens": 7527,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 0.964,
+     "text": "```python\n```",
+     "prompt_tokens": 8144,
+     "cached_tokens": 7913,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 0.975,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8422,
+     "cached_tokens": 8182,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 0.425,
+     "text": "```python\n```",
+     "prompt_tokens": 9138,
+     "cached_tokens": 8907,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {
+    "ram_hits": 0,
+    "ssd_loads": 4,
+    "prefetch_hits": 0,
+    "prefetch_partial": 0,
+    "saves": 12,
+    "bytes_written": 246357672,
+    "bytes_read": 477895224,
+    "save_s": 0.40429291501641273,
+    "load_s": 0.3219260009354912
+   },
+   "disk_gb": 1.608,
+   "build_ttft_median": 12.75,
+   "ttft_median": 0.944,
+   "ttft_p90": 1.347,
+   "ttft_max": 1.575,
+   "restart_ttft_median": 0.97
+  },
+  "stock_ram": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 13.025,
+     "text": "```python\n# file: mailcap.py\n\"\"\"Mailcap file handling.  See RFC 1524",
+     "prompt_tokens": 6830,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 11.898,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 7216,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 10.359,
+     "text": "```python\nimport os\nimport re\nimport sys\n\n# Expression parsing for plural form selection.\n_token_pattern =",
+     "prompt_tokens": 7467,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 11.68,
+     "text": "```python\n# file: pipes.py\n\"\"\"Conversion pipeline templates.\n\nThe problem:\n------------\n\nSuppose you",
+     "prompt_tokens": 8210,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.256,
+     "text": "```python\n```",
+     "prompt_tokens": 7077,
+     "cached_tokens": 6826,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.497,
+     "text": "```python\n```",
+     "prompt_tokens": 7463,
+     "cached_tokens": 7212,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.296,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7714,
+     "cached_tokens": 7463,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.535,
+     "text": "```python\n```",
+     "prompt_tokens": 8457,
+     "cached_tokens": 8206,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 0.256,
+     "text": "```python\n```",
+     "prompt_tokens": 7304,
+     "cached_tokens": 7073,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 0.25,
+     "text": "```python\n```",
+     "prompt_tokens": 7690,
+     "cached_tokens": 7459,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 0.516,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 7950,
+     "cached_tokens": 7710,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 0.256,
+     "text": "```python\n```",
+     "prompt_tokens": 8684,
+     "cached_tokens": 8453,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 0,
+     "ttft": 0.542,
+     "text": "```python\n```",
+     "prompt_tokens": 7531,
+     "cached_tokens": 7300,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 1,
+     "ttft": 0.259,
+     "text": "```python\n```",
+     "prompt_tokens": 7917,
+     "cached_tokens": 7686,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 2,
+     "ttft": 0.255,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8186,
+     "cached_tokens": 7946,
+     "after_restart": false
+    },
+    {
+     "round": 3,
+     "agent": 3,
+     "ttft": 0.269,
+     "text": "```python\n```",
+     "prompt_tokens": 8911,
+     "cached_tokens": 8680,
+     "after_restart": false
+    },
+    {
+     "round": 4,
+     "agent": 0,
+     "ttft": 14.779,
+     "text": "```python\n```",
+     "prompt_tokens": 7758,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 1,
+     "ttft": 12.721,
+     "text": "```python\n```",
+     "prompt_tokens": 8144,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 2,
+     "ttft": 13.253,
+     "text": "```python\nimport os\nimport re\nimport sys\n```",
+     "prompt_tokens": 8422,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 4,
+     "agent": 3,
+     "ttft": 16.302,
+     "text": "```python\n```",
+     "prompt_tokens": 9138,
+     "cached_tokens": 17,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 11.789,
+   "ttft_median": 0.264,
+   "ttft_p90": 0.516,
+   "ttft_max": 0.542,
+   "restart_ttft_median": 14.016
+  }
+ },
+ "identical_replies": {
+  "v03_12_vs_stock_ram": "20/20",
+  "v03_12_vs_stock": "20/20"
+ }
+}
