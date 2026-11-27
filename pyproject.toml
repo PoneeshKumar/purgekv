@@ -1,17 +1,18 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "purgekv"
-version = "0.3.1"
-description = "Layer-streamed KV-cache resume and an append-only SSD KV tier for MLX on Apple Silicon"
+version = "0.4.0"
+description = "An SSD tier for MLX KV caches on Apple Silicon: purgekv-server is mlx_lm.server that reloads chats from SSD instead of recomputing them"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = ["mlx>=0.32", "mlx-lm>=0.32", "numpy"]
 keywords = ["mlx", "apple-silicon", "llm", "kv-cache", "inference"]
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -25,12 +26,14 @@ purgekv-server = "purgekv.server:main"
 
 [project.urls]
 Homepage = "https://github.com/PoneeshKumar/purgekv"
+Changelog = "https://github.com/PoneeshKumar/purgekv/blob/main/CHANGELOG.md"
+Research = "https://github.com/PoneeshKumar/purgekv/blob/main/docs/RESEARCH.md"
 
 [tool.setuptools]
-packages = ["purgekv"]
+packages = ["purgekv", "purgekv.native"]
 
 [tool.setuptools.package-data]
-purgekv = ["native/*.cpp"]  # compiled on first use by reader="native"
+"purgekv.native" = ["*.cpp"]  # compiled on first use by reader="native"
 
 [tool.ruff]
 line-length = 120

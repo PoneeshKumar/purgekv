@@ -322,3 +322,45 @@ def test_pure_recurrent_model_stays_ram_only(tmp_path):
     pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0)
     pc.insert_cache(M, toks(10), advance(mixed("recurrent"), 10, 40))
     assert pc.stats["saves"] == 0  # no layer reports a token count to key the save on
+
+
+def chat_bytes(n):
+    return n * LAYERS * 2 * HEADS * DIM * 2  # keys and values, bf16
+
+
+def test_disk_limit_deletes_the_least_recently_used_chats(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0, disk_bytes=int(2.5 * chat_bytes(300)))
+    chats = [chat(300, 40 + i) for i in range(3)]
+    pc.insert_cache(M, toks(301, 0), chats[0])
+    pc.insert_cache(M, toks(301, 10_000), chats[1])
+    pc.fetch_nearest_cache(M, toks(301, 0) + [1])  # chat 0 loads from SSD: now used more recently than chat 1
+    pc.insert_cache(M, toks(301, 20_000), chats[2])  # over the limit: chat 1 goes
+    assert pc.stats["evicted"] == 1 and pc.stats["disk_bytes"] <= pc.disk_bytes
+    assert pc._disk_match(M, toks(301, 10_000), 300)[0] is None
+    assert pc._disk_match(M, toks(301, 20_000), 300)[1] == 300  # chat 2 (in RAM too) is on SSD
+    pc.insert_cache(M, toks(201, 30_000), chat(200, 49))  # pushes chat 2 out of RAM; chat 0 goes from SSD
+    cache, rest = pc.fetch_nearest_cache(M, toks(301, 20_000) + [1])
+    assert rest == [20_300, 1] and same(chats[2], cache)
+    files = {f for f in os.listdir(tmp_path / M) if f.endswith(".raw")}
+    assert len(files) == 2  # chat 1's files are gone from disk
+
+
+def test_disk_limit_keeps_shared_files_and_the_newest_chat(tmp_path):
+    pc = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0, disk_bytes=chat_bytes(100))
+    a = chat(300, 50)
+    pc.insert_cache(M, toks(300), a)  # one chat over the limit is kept
+    assert pc.stats["evicted"] == 0 and pc._disk_match(M, toks(300), 300)[1] == 300
+    grow(a, 50, 51, mx.bfloat16)
+    pc.insert_cache(M, toks(350), a)  # supersedes the first save and shares its segment
+    cache, rest = pc.fetch_nearest_cache(M, toks(350) + [1])
+    assert rest == [1] and same(a, cache)
+
+
+def test_disk_limit_applies_after_restart(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0, disk_bytes=0)
+    for i in range(3):
+        pc.insert_cache(M, toks(301, 10_000 * i), chat(300, 60 + i))
+    assert pc.stats["evicted"] == 0  # 0: no limit
+    pc2 = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0, disk_bytes=int(1.5 * chat_bytes(300)))
+    assert pc2._disk_match(M, toks(301, 0), 300)[0] is None  # oldest chat deleted on reopen
+    assert pc2._disk_match(M, toks(301, 20_000), 300)[1] == 300 and pc2.stats["evicted"] == 2

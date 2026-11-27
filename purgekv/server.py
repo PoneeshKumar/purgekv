@@ -1,7 +1,7 @@
 """purgekv-server: mlx_lm.server with an SSD tier for its prompt cache.
 
   purgekv-server --model mlx-community/Llama-3.2-3B-Instruct-4bit \\
-                 --prompt-cache-bytes 4GB [--kv-dir DIR] [--prefetch-gb 2] [--kv-bits 8]
+                 --prompt-cache-bytes 4GB [--kv-dir DIR] [--disk-gb 20] [--prefetch-gb 2] [--kv-bits 8]
 
 Every flag of `mlx_lm.server` works; the OpenAI-compatible API is unchanged, so any
 client (chat apps, coding agents) gets this with no code changes. What it adds:
@@ -10,6 +10,8 @@ client (chat apps, coding agents) gets this with no code changes. What it adds:
     that are new since the last save; chats that share a prefix share its files).
     Chats pushed out of RAM by --prompt-cache-bytes, or lost to a server restart, are
     reloaded from SSD instead of recomputed.
+  * Disk limit: --disk-gb (default 20, 0 = no limit) caps the SSD tier. Past it, the
+    chats used least recently are deleted first; the newest chat is always kept.
   * Think-time prefetch: a chat that just got a reply is waiting on its user or on a
     tool (agents). If it is pushed out of RAM, the server reads it back from SSD in the
     background, oldest-waiting first, up to --prefetch-gb, so the next request does
@@ -30,7 +32,7 @@ from mlx_lm.models.cache import (KVCache, LRUPromptCache, QuantizedKVCache, can_
 from .segstore import SegmentKVStore, INDEX
 
 CONFIG = {"kv_dir": os.path.expanduser("~/.cache/purgekv/server"), "prefetch_bytes": 2 << 30,
-          "ram_bytes": None}
+          "disk_bytes": 20 << 30, "ram_bytes": None}
 log = logging.getLogger("purgekv")
 
 
@@ -42,17 +44,19 @@ class SSDPromptCache(LRUPromptCache):
     """Drop-in for mlx_lm.models.cache.LRUPromptCache: same RAM LRU, plus an SSD tier
     under it and background prefetch of chats that are waiting for their next turn."""
 
-    def __init__(self, max_size=10, max_bytes=1 << 63, kv_dir=None, prefetch_bytes=None):
+    def __init__(self, max_size=10, max_bytes=1 << 63, kv_dir=None, prefetch_bytes=None, disk_bytes=None):
         super().__init__(max_size, CONFIG["ram_bytes"] or max_bytes)
         self.root = kv_dir or CONFIG["kv_dir"]
         self.prefetch_bytes = CONFIG["prefetch_bytes"] if prefetch_bytes is None else prefetch_bytes
+        self.disk_bytes = CONFIG["disk_bytes"] if disk_bytes is None else disk_bytes  # <= 0: no limit
         self.stores = {}      # model key -> SegmentKVStore
         self.tokens = {}      # (model key, session) -> np.int32 tokens covered by the saved cache
         self.waiting = OrderedDict()   # (model key, session) -> None, oldest reply first
         self.prefetched = {}  # (model key, session) -> (Future, nbytes)
         self._io = ThreadPoolExecutor(1, thread_name_prefix="purgekv-prefetch")
         self.stats = {"ram_hits": 0, "ssd_loads": 0, "prefetch_hits": 0, "prefetch_partial": 0,
-                      "saves": 0, "bytes_written": 0, "bytes_read": 0, "save_s": 0.0, "load_s": 0.0}
+                      "saves": 0, "bytes_written": 0, "bytes_read": 0, "save_s": 0.0, "load_s": 0.0,
+                      "evicted": 0, "disk_bytes": 0}
 
     # ---- per-model stores, reopened after a restart ---------------------------
     def _store(self, model):
@@ -69,6 +73,7 @@ class SSDPromptCache(LRUPromptCache):
             else:
                 st = SegmentKVStore(root)
             self.stores[model] = st
+            self._evict()  # --disk-gb may be lower than when these chats were saved
         return self.stores[model]
 
     def _disk_match(self, model, tokens, limit, partial=False, load=False):
@@ -201,10 +206,11 @@ class SSDPromptCache(LRUPromptCache):
         if src is not None and m == n == src_n:
             self.waiting.pop((model, src), None)
             self.waiting[(model, src)] = None
+            store.sessions[src]["info"]["used"] = time.time()
             return
         t = time.perf_counter()
         key = uuid.uuid4().hex[:16]
-        written, info = 0, {"tokens": f"{key}.tok", "layout": layout, "trim": trimmable}
+        written, info = 0, {"tokens": f"{key}.tok", "layout": layout, "trim": trimmable, "used": time.time()}
         if snap:  # write it first: if a layer cannot be serialized, nothing is half-saved
             info["snap"] = f"{key}.snap.safetensors"
             path = os.path.join(store.root, info["snap"])
@@ -235,7 +241,44 @@ class SSDPromptCache(LRUPromptCache):
             self.waiting.popitem(last=False)
         self.stats["saves"] += 1
         self.stats["bytes_written"] += written
+        self._evict(keep=(model, key))
         self.stats["save_s"] += time.perf_counter() - t
+
+    def _disk_used(self):
+        """Bytes on disk for every saved chat, counting files that chats share once."""
+        seen, total = set(), 0
+        for st in self.stores.values():
+            for s in st.sessions.values():
+                info = s.get("info", {})
+                for p in [p for p, _ in s["segs"]] + [os.path.join(st.root, info[f]) for f in ("tokens", "snap")
+                                                      if info.get(f)]:
+                    if p not in seen:
+                        seen.add(p)
+                        try:
+                            total += os.path.getsize(p)
+                        except OSError:
+                            pass
+        return total
+
+    def _evict(self, keep=None):
+        """Delete the chats used least recently until the SSD tier fits in disk_bytes.
+        `keep` (the chat just saved) is never deleted, so one chat may exceed the limit."""
+        used = self._disk_used()
+        if self.disk_bytes > 0 and used > self.disk_bytes:
+            order = sorted((s.get("info", {}).get("used", 0.0), m, k)
+                           for m, st in self.stores.items() for k, s in st.sessions.items() if (m, k) != keep)
+            changed = set()
+            for _, m, k in order:
+                if used <= self.disk_bytes:
+                    break
+                self._forget(m, k)
+                changed.add(m)
+                self.stats["evicted"] += 1
+                used = self._disk_used()
+            for m in changed:
+                self.stores[m].save_index()
+            log.info(f"purgekv: SSD tier at {used / (1 << 30):.2f} GB after deleting old chats")
+        self.stats["disk_bytes"] = used
 
     def _forget(self, model, key):
         store = self.stores[model]
@@ -287,6 +330,8 @@ class SSDPromptCache(LRUPromptCache):
             snaps = iter(load_prompt_cache(snap) if snap else [])
             kvs = iter(kv)
             cache = [next(kvs) if k == "kv" else next(snaps) for k in layout]
+        store.sessions[key]["info"]["used"] = time.time()
+        store.save_index()
         self.stats["ssd_loads"] += 1
         self.stats["bytes_read"] += sum(b.size for _, _, b in raw) + (os.path.getsize(snap) if snap else 0)
         self.stats["load_s"] += time.perf_counter() - t
@@ -322,12 +367,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(add_help=False)
     ap.add_argument("--kv-dir", default=CONFIG["kv_dir"])
     ap.add_argument("--prefetch-gb", type=float, default=2.0)
+    ap.add_argument("--disk-gb", type=float, default=20.0)
     ap.add_argument("--prompt-cache-bytes", default=None)
     ours, rest = ap.parse_known_args(argv)
     if "-h" in rest or "--help" in rest:
         print(__doc__)
     CONFIG["kv_dir"] = os.path.expanduser(ours.kv_dir)
     CONFIG["prefetch_bytes"] = int(ours.prefetch_gb * (1 << 30))
+    CONFIG["disk_bytes"] = int(ours.disk_gb * (1 << 30))
     if ours.prompt_cache_bytes is not None:
         from mlx_lm.server import _parse_size
         CONFIG["ram_bytes"] = _parse_size(ours.prompt_cache_bytes)

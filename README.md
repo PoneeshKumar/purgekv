@@ -16,7 +16,7 @@ about a second instead of being recomputed, which takes 20–45 s for an 8K-toke
 Needs an Apple Silicon Mac and Python 3.10+.
 
 ```bash
-pip install git+https://github.com/PoneeshKumar/purgekv
+pip install purgekv
 purgekv-server --model mlx-community/Llama-3.2-3B-Instruct-4bit --prompt-cache-bytes 2GB
 ```
 
@@ -24,7 +24,8 @@ It takes every `mlx_lm.server` flag and serves the same OpenAI-compatible API at
 `http://localhost:8080/v1`, so chat apps and agent frameworks work unchanged: point
 them at that URL. Add `--kv-bits 8` to halve the bytes stored and read (replies can
 differ slightly from full precision). Saved chats live in `~/.cache/purgekv/server`
-(`--kv-dir` to change it).
+(`--kv-dir` to change it), up to 20 GB: past that, the chats used least recently are
+deleted first (`--disk-gb` to change it, `0` for no limit).
 
 ## Results
 
@@ -49,7 +50,7 @@ building a trading strategy on Qwen3-8B, 1 GB of RAM for their chats: average wa
 the first token **15.7 s → 7.0 s**; agents whose chat had left RAM **21.8 s → 6.9 s**.
 Run it yourself: `python examples/trading_agents.py` (paper trading only).
 
-Details: [docs/RESEARCH.md](docs/RESEARCH.md#k-a-server-for-agents-ssd-tier-prefetch-8-bit-kv-purgekvserverpy-researchbench_serverpy).
+Details: [docs/RESEARCH.md](https://github.com/PoneeshKumar/purgekv/blob/main/docs/RESEARCH.md#k-a-server-for-agents-ssd-tier-prefetch-8-bit-kv-purgekvserverpy-researchbench_serverpy).
 
 ## Library: layer-streamed resume
 
@@ -57,7 +58,7 @@ For your own MLX code, purgekv also streams a saved KV cache
 from SSD layer by layer, so the GPU starts computing immediately instead of waiting
 for the whole cache to load.
 
-<p align="center"><img src="docs/assets/streaming.gif" alt="SSD reads layer i+1 while the GPU computes layer i; resume drops from 0.46 s to 0.29 s" width="800"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/PoneeshKumar/purgekv/main/docs/assets/streaming.gif" alt="SSD reads layer i+1 while the GPU computes layer i; resume drops from 0.46 s to 0.29 s" width="800"></p>
 
 | Resume a 6K-token chat from SSD (M4 MacBook, Llama 3.2 3B) | Load, then compute | **Streamed** | |
 |---|---|---|---|
@@ -78,7 +79,7 @@ is compute-only. Measured on the same M4 MacBook (16 GB), Llama 3.2 3B, 32-token
 
 Llama 3.2 1B at **64K tokens**: 1.06 s → 0.80 s streamed → **0.19 s prefetched**, against
 205 s to recompute. Output was identical to a never-saved cache in every run.
-Details, 256-token messages and memory: [docs/RESEARCH.md](docs/RESEARCH.md#i-large-chats-8k64k-tokens-measured-researchbench_scalepy).
+Details, 256-token messages and memory: [docs/RESEARCH.md](https://github.com/PoneeshKumar/purgekv/blob/main/docs/RESEARCH.md#i-large-chats-8k64k-tokens-measured-researchbench_scalepy).
 
 ### Try it
 
@@ -120,7 +121,7 @@ it changed the greedy output in 3 of 6 short resumes in our tests.
 
 ## How streaming works
 
-<img src="docs/assets/timeline.png" alt="Timeline: load then compute takes 0.46 s; streamed takes 0.29 s" width="800">
+<img src="https://raw.githubusercontent.com/PoneeshKumar/purgekv/main/docs/assets/timeline.png" alt="Timeline: load then compute takes 0.46 s; streamed takes 0.29 s" width="800">
 
 Mac LLM servers (oMLX, LM Studio's mlx-engine, vllm-mlx) resume a chat in two steps:
 load the entire cache from SSD, then run the new message through the model. Time to
@@ -178,12 +179,13 @@ purgekv started as an investigation into LLM memory on the Mac. Some findings:
 - Letting the macOS kernel purge idle caches (purgeable memory) does **not** work: it deletes them before it ever signals memory pressure.
 
 The full log, with every experiment, negative result and raw data, is in
-[docs/RESEARCH.md](docs/RESEARCH.md).
+[docs/RESEARCH.md](https://github.com/PoneeshKumar/purgekv/blob/main/docs/RESEARCH.md).
 
 ## Limits
 
-Tested on one M4 MacBook (16 GB). purgekv-server does not yet cap its disk use: delete
-`--kv-dir` (default `~/.cache/purgekv/server`) to clear it. Models whose cache cannot be
+Tested on one M4 MacBook (16 GB). The disk limit counts only the models the server has
+loaded since it started; delete `--kv-dir` to clear everything. The newest chat is always
+kept, even if it alone is larger than `--disk-gb`. Models whose cache cannot be
 rewound keep each prompt checkpoint on disk (4 Qwen3.5 agents with 8K-token chats: 1.6 GB).
 With chat templates that rewrite earlier replies (Qwen3 drops the empty `<think></think>`),
 each save also rewrites the previous turn, so SSD writes are about 2× the minimum.

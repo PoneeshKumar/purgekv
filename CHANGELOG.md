@@ -1,8 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-11-27
 
 ### Added
+- **On PyPI:** `pip install purgekv`. Releases are published from GitHub by
+  `.github/workflows/release.yml` (PyPI trusted publishing).
+- **Disk limit:** `--disk-gb` (default 20, `0` for no limit). When the SSD tier is over the
+  limit, the chats used least recently are deleted first; files that chats share are
+  counted once and deleted only with the last chat that uses them. The newest chat is
+  always kept. The limit also applies to chats left on disk by an earlier run, when the
+  server loads that model. `stats.json` reports `disk_bytes` and `evicted`.
 - **purgekv-server works with any model mlx-lm runs.** Full-attention layers keep the
   append-only segments; every other layer type (sliding window, linear attention /
   recurrent state, unknown types) is saved whole with mlx-lm's `save_prompt_cache`.
