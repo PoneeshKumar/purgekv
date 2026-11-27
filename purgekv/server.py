@@ -35,6 +35,14 @@ CONFIG = {"kv_dir": os.path.expanduser("~/.cache/purgekv/server"), "prefetch_byt
           "disk_bytes": 20 << 30, "ram_bytes": None}
 log = logging.getLogger("purgekv")
 
+# When is reading a saved chat back worth it? Reading one token's KV from SSD measured
+# 20-60x faster than computing it on an M4 (Llama 3.2 1B and 3B), so a load pays off once
+# the tokens it saves are more than 1/READ_RATIO of the tokens it reads. Below MIN_REUSE
+# tokens, recomputing is about as fast as any read. Without these, a new chat that shares
+# only a chat template's header (~20 tokens) with a saved one read all of that chat.
+MIN_REUSE = 64
+READ_RATIO = 16
+
 
 def _safe(name):
     return "".join(ch if ch.isalnum() or ch in "-_." else "_" for ch in str(name))[:120]
@@ -119,6 +127,8 @@ class SSDPromptCache(LRUPromptCache):
         except Exception:
             log.exception("purgekv: SSD lookup failed")
             key, n = None, 0
+        if key is not None and not self._worth_loading(model, key, n, n - ram_n):
+            key = None
         if key is not None:
             self.waiting.pop((model, key), None)
         if key is None or n <= ram_n:
@@ -127,7 +137,7 @@ class SSDPromptCache(LRUPromptCache):
             self._schedule()
             return cache, rest
         try:
-            loaded = self._load(model, key)
+            loaded = self._load(model, key, upto=n)
             extra = self._length(loaded) - n
             if extra > 0:  # the saved chat runs past the shared start: drop the tail
                 if not can_trim_prompt_cache(loaded):
@@ -306,18 +316,41 @@ class SSDPromptCache(LRUPromptCache):
                     pass
         return raw
 
-    def _files(self, model, key):
+    def _files(self, model, key, upto=None):
+        """Segment files and snapshot to rebuild the chat, or just its first `upto` tokens.
+        A chat with a snapshot is always read whole: the snapshot is at its full length."""
         store = self.stores[model]
         s = store.sessions[key]
         snap = s["info"].get("snap")
-        return list(s["segs"]), os.path.join(store.root, snap) if snap else None
+        segs = list(s["segs"])
+        if upto is not None and not snap:
+            got, n = [], 0
+            for seg in segs:
+                if n >= upto:
+                    break
+                got.append(seg)
+                n += seg[1]["shapes"][0][2]
+            segs = got
+        return segs, os.path.join(store.root, snap) if snap else None
 
-    def _load(self, model, key):
+    def _worth_loading(self, model, key, n, gain):
+        """Reuse `n` tokens of saved chat `key`, saving `gain` tokens of compute over RAM?"""
+        if gain < MIN_REUSE:
+            return False
+        pf = self.prefetched.get((model, key))
+        if pf is not None and pf[0].done():
+            return True  # already read
+        segs, snap = self._files(model, key, upto=n)
+        read = len(self.tokens[(model, key)]) if snap else sum(m["shapes"][0][2] for _, m in segs)
+        return gain * READ_RATIO >= read
+
+    def _load(self, model, key, upto=None):
         store = self._store(model)
         t = time.perf_counter()
-        segs, snap = self._files(model, key)
+        segs, snap = self._files(model, key, upto)
         pf = self.prefetched.pop((model, key), None)
         if pf is not None:
+            segs = self._files(model, key)[0]  # the prefetch read them all
             self.stats["prefetch_hits" if pf[0].done() else "prefetch_partial"] += 1
             raw = pf[0].result()
         else:
@@ -335,7 +368,7 @@ class SSDPromptCache(LRUPromptCache):
         self.stats["ssd_loads"] += 1
         self.stats["bytes_read"] += sum(b.size for _, _, b in raw) + (os.path.getsize(snap) if snap else 0)
         self.stats["load_s"] += time.perf_counter() - t
-        log.info(f"purgekv: loaded {store.sessions[key]['saved']} tokens from SSD "
+        log.info(f"purgekv: loaded {self._length(cache)} tokens from SSD "
                  f"({'prefetched' if pf else 'cold'}) in {time.perf_counter() - t:.2f}s")
         return cache
 

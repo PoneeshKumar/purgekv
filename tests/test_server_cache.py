@@ -364,3 +364,32 @@ def test_disk_limit_applies_after_restart(tmp_path):
     pc2 = SSDPromptCache(kv_dir=str(tmp_path), prefetch_bytes=0, disk_bytes=int(1.5 * chat_bytes(300)))
     assert pc2._disk_match(M, toks(301, 0), 300)[0] is None  # oldest chat deleted on reopen
     assert pc2._disk_match(M, toks(301, 20_000), 300)[1] == 300 and pc2.stats["evicted"] == 2
+
+
+def test_a_short_shared_start_is_recomputed_not_read(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(2000, 70)
+    pc.insert_cache(M, toks(2000), a)
+    pc.insert_cache(M, toks(201, 50_000), chat(200, 71))  # a leaves RAM
+    pc.insert_cache(M, toks(2000), a)  # already saved: a is "waiting" for its next turn
+    pc.insert_cache(M, toks(201, 50_000), chat(200, 71))
+    new = toks(20) + toks(500, 90_000)  # shares only a template header with chat a
+    cache, rest = pc.fetch_nearest_cache(M, new)
+    assert cache is None and rest == new and pc.stats["ssd_loads"] == 0
+    assert any(k[1] in pc.stores[M].sessions and len(pc.tokens[k]) == 2000 for k in pc.waiting)  # still waiting
+
+
+def test_a_partial_match_reads_only_the_segments_it_needs(tmp_path):
+    pc = SSDPromptCache(max_size=1, kv_dir=str(tmp_path), prefetch_bytes=0)
+    a = chat(300, 72)
+    pc.insert_cache(M, toks(300), a)
+    grow(a, 300, 73, mx.bfloat16)
+    pc.insert_cache(M, toks(600), a)  # segments 0-300 and 300-600
+    pc.insert_cache(M, toks(201, 50_000), chat(200, 74))  # a leaves RAM
+    new = toks(250) + toks(100, 90_000)  # an edit inside the first turn
+    cache, rest = pc.fetch_nearest_cache(M, new)
+    assert rest == new[250:] and cache[0].offset == 250 and pc.stats["ssd_loads"] == 1
+    assert pc.stats["bytes_read"] == chat_bytes(300)  # the second segment was never read
+    k, v = live(cache)[0]
+    k2, v2 = live(a)[0]
+    assert mx.array_equal(k, k2[..., :250, :]).item() and mx.array_equal(v, v2[..., :250, :]).item()

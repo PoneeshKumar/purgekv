@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- **purgekv-server read a whole saved chat to reuse a few tokens.** A new chat that shared
+  only the chat template's header (~20 tokens) with a saved chat loaded all of it from SSD
+  (six 4K-token agents on Llama 3.2 1B: 5 loads, 970 MB read). A chat is now read back only
+  if it saves at least 64 tokens of compute and at least 1/16 of the tokens it reads
+  (`MIN_REUSE`, `READ_RATIO`): the same run reads nothing. Agent turns are unchanged
+  (4 agents, Llama 3.2 1B: 4.46 s stock → 0.42 s).
+- A chat that matches only partway is read up to the segment it needs, not to its end.
+- A short match no longer took the saved chat off the prefetch list.
+
 ## 0.4.1 — 2026-11-27
 
 ### Fixed
