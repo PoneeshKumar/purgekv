@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.2 — 2026-11-27
 
 ### Fixed
 - **purgekv-server read a whole saved chat to reuse a few tokens.** A new chat that shared
