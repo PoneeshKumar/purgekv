@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.1 — 2026-11-27
+
+### Fixed
+- `purgekv.stream` failed to import with mlx-lm main: its model refactor (ml-explore/mlx-lm#2082)
+  moved `create_attention_mask` to `mlx_lm.layers.attention`. purgekv now imports it from
+  either place, and the full test suite (model tests included) passes on both mlx-lm 0.32.2
+  and main (6fe0ce4).
+- Server benchmark on mlx-lm main (4 agents, 4K-token chats, 0.3 GB of RAM), median time to
+  first token, stock → purgekv-server: Llama 3.2 1B 3.40 s → 0.40 s, Qwen3.5 0.8B
+  2.45 s → 0.61 s; after a restart Gemma 3 1B 4.33 s → 0.28 s. Raw data:
+  `results/server_mlxlm-main_*.json`.
+
 ## 0.4.0 — 2026-11-27
 
 ### Added

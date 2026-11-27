@@ -1,0 +1,393 @@
+{
+ "args": {
+  "model": "mlx-community/Llama-3.2-1B-Instruct-4bit",
+  "agents": 4,
+  "ctx": 4096,
+  "rounds": 2,
+  "tool_s": 1.5,
+  "ram_gb": 0.3,
+  "prefetch_gb": 1.5,
+  "max_tokens": 24,
+  "configs": "stock,v03_12,stock_ram",
+  "port": 8765,
+  "out": "/private/tmp/claude-501/-Users-poneeshkumar-Library-Application-Support-Claude-scratch-workspaces-31fa99e8-79cf-48e1-8a3d-4b8560694393-2db82ffc-0838-48a4-af84-7b9ff0af4946-scratch-2026-11-16-9ad8f0/000eb0b9-ba48-4921-ba18-c33a83b92168/scratchpad/main_Llama-3.2-1B-Instruct-4bit.json",
+  "merge": false
+ },
+ "chip": "Apple M4",
+ "ram_gb": 16,
+ "configs": {
+  "stock": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 3.534,
+     "text": "Here's a Python code snippet that should help you with the tasks you mentioned:\n\n```python\nimport os\nimport warnings",
+     "prompt_tokens": 3359,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 3.429,
+     "text": "The code provided appears to be a collection of Python modules, each with its own specific functionality. Here's a breakdown of",
+     "prompt_tokens": 3450,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 3.275,
+     "text": "The provided code is the gettext.py module from the GNU gettext library. It provides functions for internationalization and localization support.\n\n",
+     "prompt_tokens": 3392,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 3.728,
+     "text": "The code provided appears to be a Python module that defines several functions and classes related to opcode handling. \n\nHere are the",
+     "prompt_tokens": 4012,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 3.291,
+     "text": "You can use the `test_0_1_*.py` files as input for the `mailcap.py`",
+     "prompt_tokens": 3598,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 3.424,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 3689,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 3.367,
+     "text": "We should update the `test_2_1_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3631,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 4.093,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 4251,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 3.621,
+     "text": "You can use the `mailcap.py` tool to parse and analyze the `test_0_2_*.py",
+     "prompt_tokens": 3837,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 3.681,
+     "text": "We should investigate the test failures to identify the cause of the issues, possibly by re-running the tests or by analyzing the",
+     "prompt_tokens": 3918,
+     "cached_tokens": 47,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 3.688,
+     "text": "We should update the `test_2_2_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3870,
+     "cached_tokens": 47,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 4.656,
+     "text": "We should continue to run the tests to identify the cause of the issues, possibly by adding more test cases or modifying the",
+     "prompt_tokens": 4480,
+     "cached_tokens": 47,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 3.481,
+   "ttft_median": 3.396,
+   "ttft_p90": 3.424,
+   "ttft_max": 4.093,
+   "restart_ttft_median": 3.684
+  },
+  "v03_12": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 3.281,
+     "text": "Here's a Python code snippet that should help you with the tasks you mentioned:\n\n```python\nimport os\nimport warnings",
+     "prompt_tokens": 3359,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 3.373,
+     "text": "The code provided appears to be a collection of Python modules, each with its own specific functionality. Here's a breakdown of",
+     "prompt_tokens": 3450,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 3.352,
+     "text": "The provided code is the gettext.py module from the GNU gettext library. It provides functions for internationalization and localization support.\n\n",
+     "prompt_tokens": 3392,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 4.261,
+     "text": "The code provided appears to be a Python module that defines several functions and classes related to opcode handling. \n\nHere are the",
+     "prompt_tokens": 4012,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.417,
+     "text": "You can use the `test_0_1_*.py` files as input for the `mailcap.py`",
+     "prompt_tokens": 3598,
+     "cached_tokens": 3383,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.386,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 3689,
+     "cached_tokens": 3474,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.383,
+     "text": "We should update the `test_2_1_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3631,
+     "cached_tokens": 3415,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.431,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 4251,
+     "cached_tokens": 4036,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 0.362,
+     "text": "You can use the `mailcap.py` tool to parse the `test_0_2_*.py` files",
+     "prompt_tokens": 3837,
+     "cached_tokens": 3622,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 0.368,
+     "text": "We should investigate the test failures to identify the cause of the issues, possibly by re-running the tests or by analyzing the",
+     "prompt_tokens": 3918,
+     "cached_tokens": 3704,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 0.425,
+     "text": "We should update the `test_2_2_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3870,
+     "cached_tokens": 3655,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 0.479,
+     "text": "We should continue to run the tests to identify the cause of the issues, possibly by adding more test cases or modifying the",
+     "prompt_tokens": 4480,
+     "cached_tokens": 4266,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {
+    "ram_hits": 0,
+    "ssd_loads": 4,
+    "prefetch_hits": 0,
+    "prefetch_partial": 0,
+    "saves": 8,
+    "bytes_written": 31260672,
+    "bytes_read": 499613696,
+    "save_s": 0.07462104200385511,
+    "load_s": 0.2698113339720294,
+    "evicted": 0,
+    "disk_bytes": 527105316
+   },
+   "disk_gb": 0.527,
+   "build_ttft_median": 3.362,
+   "ttft_median": 0.401,
+   "ttft_p90": 0.417,
+   "ttft_max": 0.431,
+   "restart_ttft_median": 0.396
+  },
+  "stock_ram": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 3.153,
+     "text": "Here's a Python code snippet that should help you with the tasks you mentioned:\n\n```python\nimport os\nimport warnings",
+     "prompt_tokens": 3359,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 3.172,
+     "text": "The code provided appears to be a collection of Python modules, each with its own specific functionality. Here's a breakdown of",
+     "prompt_tokens": 3450,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 3.133,
+     "text": "The provided code is the gettext.py module from the GNU gettext library. It provides functions for internationalization and localization support.\n\n",
+     "prompt_tokens": 3392,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 3.831,
+     "text": "The code provided appears to be a Python module that defines several functions and classes related to opcode handling. \n\nHere are the",
+     "prompt_tokens": 4012,
+     "cached_tokens": 47,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.294,
+     "text": "You can use the `test_0_1_*.py` files as input for the `mailcap.py`",
+     "prompt_tokens": 3598,
+     "cached_tokens": 3383,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.359,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 3689,
+     "cached_tokens": 3474,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.293,
+     "text": "We should update the `test_2_1_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3631,
+     "cached_tokens": 3415,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.292,
+     "text": "We should investigate the test failures to identify the cause of the issues.",
+     "prompt_tokens": 4251,
+     "cached_tokens": 4036,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 3.589,
+     "text": "You can use the `mailcap.py` tool to parse and analyze the `test_0_2_*.py",
+     "prompt_tokens": 3837,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 3.689,
+     "text": "We should investigate the test failures to identify the cause of the issues, possibly by re-running the tests or by analyzing the",
+     "prompt_tokens": 3918,
+     "cached_tokens": 47,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 3.67,
+     "text": "We should update the `test_2_2_*.py` tests to use the new `c2py`",
+     "prompt_tokens": 3870,
+     "cached_tokens": 47,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 4.403,
+     "text": "We should continue to run the tests to identify the cause of the issues, possibly by adding more test cases or modifying the",
+     "prompt_tokens": 4480,
+     "cached_tokens": 47,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 3.163,
+   "ttft_median": 0.293,
+   "ttft_p90": 0.294,
+   "ttft_max": 0.359,
+   "restart_ttft_median": 3.679
+  }
+ },
+ "identical_replies": {
+  "v03_12_vs_stock_ram": "11/12",
+  "v03_12_vs_stock": "11/12"
+ }
+}

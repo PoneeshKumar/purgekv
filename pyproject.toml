@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "purgekv"
-version = "0.4.0"
+version = "0.4.1"
 description = "An SSD tier for MLX KV caches on Apple Silicon: purgekv-server is mlx_lm.server that reloads chats from SSD instead of recomputing them"
 readme = "README.md"
 license = "MIT"

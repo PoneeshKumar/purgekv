@@ -1,0 +1,393 @@
+{
+ "args": {
+  "model": "mlx-community/Qwen3.5-0.8B-4bit",
+  "agents": 4,
+  "ctx": 4096,
+  "rounds": 2,
+  "tool_s": 1.5,
+  "ram_gb": 0.3,
+  "prefetch_gb": 1.5,
+  "max_tokens": 24,
+  "configs": "stock,v03_12,stock_ram",
+  "port": 8765,
+  "out": "/private/tmp/claude-501/-Users-poneeshkumar-Library-Application-Support-Claude-scratch-workspaces-31fa99e8-79cf-48e1-8a3d-4b8560694393-2db82ffc-0838-48a4-af84-7b9ff0af4946-scratch-2026-11-16-9ad8f0/000eb0b9-ba48-4921-ba18-c33a83b92168/scratchpad/main_Qwen3.5-0.8B-4bit.json",
+  "merge": false
+ },
+ "chip": "Apple M4",
+ "ram_gb": 16,
+ "configs": {
+  "stock": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 3.557,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 3605,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 2.108,
+     "text": "```python\nclass Chunk:\n    def __init__(self, file, align=True, bigendian=True,",
+     "prompt_tokens": 3721,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 2.104,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3658,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 2.823,
+     "text": "```python\n# file: pipes.py\n```",
+     "prompt_tokens": 4565,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 2.356,
+     "text": "```python\n# file: pyclbr.py\n```",
+     "prompt_tokens": 3839,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 2.45,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 3968,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 2.454,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3905,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 3.157,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 4798,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 2.788,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 4074,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 2.746,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 4215,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 2.786,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 4152,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 3.571,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 5029,
+     "cached_tokens": 17,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 2.466,
+   "ttft_median": 2.452,
+   "ttft_p90": 2.454,
+   "ttft_max": 3.157,
+   "restart_ttft_median": 2.787
+  },
+  "v03_12": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 2.654,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 3605,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 2.504,
+     "text": "```python\nclass Chunk:\n    def __init__(self, file, align=True, bigendian=True,",
+     "prompt_tokens": 3721,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 2.63,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3658,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 3.704,
+     "text": "```python\n# file: pipes.py\n```",
+     "prompt_tokens": 4565,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.606,
+     "text": "```python\n# file: pyclbr.py\n```",
+     "prompt_tokens": 3839,
+     "cached_tokens": 3601,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.568,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 3968,
+     "cached_tokens": 3717,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.607,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3905,
+     "cached_tokens": 3654,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.869,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 4798,
+     "cached_tokens": 4561,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 1.295,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 4074,
+     "cached_tokens": 3835,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 0.284,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 4215,
+     "cached_tokens": 3964,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 0.348,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 4152,
+     "cached_tokens": 3901,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 0.628,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 5029,
+     "cached_tokens": 4794,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {
+    "ram_hits": 0,
+    "ssd_loads": 4,
+    "prefetch_hits": 0,
+    "prefetch_partial": 0,
+    "saves": 12,
+    "bytes_written": 247378440,
+    "bytes_read": 280857432,
+    "save_s": 0.177617667010054,
+    "load_s": 0.13527137401979417,
+    "evicted": 0,
+    "disk_bytes": 940770614
+   },
+   "disk_gb": 0.941,
+   "build_ttft_median": 2.642,
+   "ttft_median": 0.607,
+   "ttft_p90": 0.607,
+   "ttft_max": 0.869,
+   "restart_ttft_median": 0.488
+  },
+  "stock_ram": {
+   "rows": [
+    {
+     "round": 0,
+     "agent": 0,
+     "ttft": 2.229,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 3605,
+     "cached_tokens": 0,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 1,
+     "ttft": 1.968,
+     "text": "```python\nclass Chunk:\n    def __init__(self, file, align=True, bigendian=True,",
+     "prompt_tokens": 3721,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 2,
+     "ttft": 1.995,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3658,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 0,
+     "agent": 3,
+     "ttft": 2.892,
+     "text": "```python\n# file: pipes.py\n```",
+     "prompt_tokens": 4565,
+     "cached_tokens": 17,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 0,
+     "ttft": 0.214,
+     "text": "```python\n# file: pyclbr.py\n```",
+     "prompt_tokens": 3839,
+     "cached_tokens": 3601,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 1,
+     "ttft": 0.211,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 3968,
+     "cached_tokens": 3717,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 2,
+     "ttft": 0.217,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 3905,
+     "cached_tokens": 3654,
+     "after_restart": false
+    },
+    {
+     "round": 1,
+     "agent": 3,
+     "ttft": 0.222,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 4798,
+     "cached_tokens": 4561,
+     "after_restart": false
+    },
+    {
+     "round": 2,
+     "agent": 0,
+     "ttft": 3.302,
+     "text": "```python\n# file: mailcap.py\n```",
+     "prompt_tokens": 4074,
+     "cached_tokens": 0,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 1,
+     "ttft": 2.616,
+     "text": "```python\n# file: chunk.py\n\"\"\"Simple class to read IFF chunks.\n\nAn IFF chunk (",
+     "prompt_tokens": 4215,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 2,
+     "ttft": 3.018,
+     "text": "```python\nimport os\nimport re\nimport sys\nimport struct\nfrom struct import unpack\n\n# ... (rest",
+     "prompt_tokens": 4152,
+     "cached_tokens": 17,
+     "after_restart": true
+    },
+    {
+     "round": 2,
+     "agent": 3,
+     "ttft": 4.112,
+     "text": "```python\npipelines.py\n```",
+     "prompt_tokens": 5029,
+     "cached_tokens": 17,
+     "after_restart": true
+    }
+   ],
+   "stats_after_restart": {},
+   "disk_gb": 0.0,
+   "build_ttft_median": 2.112,
+   "ttft_median": 0.215,
+   "ttft_p90": 0.217,
+   "ttft_max": 0.222,
+   "restart_ttft_median": 3.16
+  }
+ },
+ "identical_replies": {
+  "v03_12_vs_stock_ram": "12/12",
+  "v03_12_vs_stock": "12/12"
+ }
+}

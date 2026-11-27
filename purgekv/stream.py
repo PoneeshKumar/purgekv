@@ -12,7 +12,10 @@ import fcntl, os
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import mlx.core as mx
-from mlx_lm.models.base import create_attention_mask
+try:
+    from mlx_lm.layers.attention import create_attention_mask  # mlx-lm after 0.32 (#2082)
+except ImportError:
+    from mlx_lm.models.base import create_attention_mask  # mlx-lm 0.32 and earlier
 from mlx_lm.models.cache import KVCache
 
 from . import fastread
